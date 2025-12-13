@@ -22,8 +22,7 @@ The bootstrap script will:
 
 ### Shell & Terminal
 - **zsh** with plugins (autosuggestions, syntax highlighting, fzf-tab)
-- **starship** - Fast, customizable prompt
-- **tmux** - Terminal multiplexer
+- **starship** - Fast, customizable prompt^
 - **fzf** - Fuzzy finder
 - **zoxide** - Smarter `cd` command
 - **atuin** - Shell history search
@@ -83,8 +82,6 @@ dotfiles/
 ├── zsh/
 │   ├── .zshrc            # Main zsh configuration
 │   └── starship.toml     # Starship prompt config
-├── vscode/
-│   └── settings.json     # VS Code settings
 └── README.md
 ```
 
