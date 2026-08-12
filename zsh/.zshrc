@@ -79,9 +79,6 @@ alias ps="procs"
 alias cd="z"
 alias cdi="zi"
 
-# Safer delete
-alias rm="trash"
-
 # Help & docs
 alias help="tldr"
 alias man="batman"
@@ -120,3 +117,31 @@ alias cls="clear"
 # -----------------
 source /opt/homebrew/share/zsh-autosuggestions/zsh-autosuggestions.zsh
 source /opt/homebrew/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
+
+# opencode
+export PATH=/Users/levin/.opencode/bin:$PATH
+
+# Android SDK
+export ANDROID_HOME=$HOME/Library/Android/sdk
+export PATH=$PATH:$ANDROID_HOME/emulator
+export PATH=$PATH:$ANDROID_HOME/platform-tools
+
+# Java
+export JAVA_HOME=/Library/Java/JavaVirtualMachines/zulu-17.jdk/Contents/Home
+
+# bun completions
+[ -s "/Users/levin/.bun/_bun" ] && source "/Users/levin/.bun/_bun"
+
+# pnpm
+export PNPM_HOME="/Users/levin/Library/pnpm"
+case ":$PATH:" in
+  *":$PNPM_HOME/bin:"*) ;;
+  *) export PATH="$PNPM_HOME/bin:$PATH" ;;
+esac
+# pnpm end
+
+# Vite+ bin (https://viteplus.dev) — sourced last so its bin wins position 1 in PATH
+. "$HOME/.vite-plus/env"
+
+# Pi
+export PATH="/Users/levin/.vite-plus/js_runtime/node/24.18.0/bin:$PATH"
