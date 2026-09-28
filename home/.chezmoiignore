@@ -6,6 +6,12 @@
 .npmrc
 {{- end }}
 
+{{- if eq .profile "mac" }}
+# systemd user-service environment; macOS has no systemd.
+.config/environment.d
+.config/environment.d/**
+{{- end }}
+
 {{- if ne .profile "mac" }}
 # The SSH config wires in the 1Password agent socket and OrbStack, both macOS.
 .ssh

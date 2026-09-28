@@ -1,0 +1,4 @@
+# Managed by chezmoi (Linux only). PATH for systemd user services, which don't
+# read shell rc files: the T3 Code server needs cloudflared (Homebrew) for
+# T3 Connect, and launches claude (~/.local/bin), codex and node (Vite+).
+PATH={{ .chezmoi.homeDir }}/.vite-plus/bin:{{ .chezmoi.homeDir }}/.local/bin:{{ .brewPrefix }}/bin:{{ .brewPrefix }}/sbin:${PATH}
