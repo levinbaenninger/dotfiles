@@ -104,7 +104,6 @@ alias lg="lazygit"
 # IDE shortcuts
 # -----------------
 alias code="code ."
-alias cursor="cursor ."
 alias webstorm="webstorm ."
 alias rider="rider ."
 
@@ -123,31 +122,6 @@ if [[ -n "$HOMEBREW_PREFIX" ]]; then
   source "$HOMEBREW_PREFIX/share/zsh-autosuggestions/zsh-autosuggestions.zsh" 2>/dev/null
   source "$HOMEBREW_PREFIX/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh" 2>/dev/null
 fi
-
-{{ if eq .profile "mac" -}}
-# Android SDK
-export ANDROID_HOME=$HOME/Library/Android/sdk
-export PATH=$PATH:$ANDROID_HOME/emulator
-export PATH=$PATH:$ANDROID_HOME/platform-tools
-
-# Java
-[[ -d /Library/Java/JavaVirtualMachines/zulu-17.jdk ]] && export JAVA_HOME=/Library/Java/JavaVirtualMachines/zulu-17.jdk/Contents/Home
-
-{{ end -}}
-# bun completions
-[ -s "$HOME/.bun/_bun" ] && source "$HOME/.bun/_bun"
-
-# pnpm
-{{ if eq .profile "mac" -}}
-export PNPM_HOME="$HOME/Library/pnpm"
-{{- else -}}
-export PNPM_HOME="$HOME/.local/share/pnpm"
-{{- end }}
-case ":$PATH:" in
-  *":$PNPM_HOME/bin:"*) ;;
-  *) export PATH="$PNPM_HOME/bin:$PATH" ;;
-esac
-# pnpm end
 
 {{ if .work -}}
 # Work secrets rendered from 1Password (see ~/.config/dotfiles/work.env)
