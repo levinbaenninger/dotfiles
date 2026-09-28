@@ -1,5 +1,22 @@
 "$schema" = 'https://starship.rs/config-schema.json'
 
+{{- /* Machine names come from .chezmoidata/fleet.yaml. */}}
+{{- $hostAliases := dict }}
+{{- range $short, $vm := .fleet.exe }}{{ $_ := set $hostAliases $vm $short }}{{ end }}
+{{- range $host, $short := .fleet.hosts }}{{ $_ := set $hostAliases $host $short }}{{ end }}
+
+# Always show which machine this is: OS icon + user@host (aliased from
+# .chezmoidata/fleet.yaml), e.g. " levin@r2d2 ~/source/echo".
+format = "$os$username$hostname$all"
+
+[os]
+disabled = false
+style = "bold blue"
+
+[username]
+format = "[$user]($style)@"
+aliases = { {{- range $i, $k := keys .fleet.users | sortAlpha }}{{ if $i }},{{ end }} {{ $k | quote }} = {{ get $.fleet.users $k | quote }}{{ end }} }
+
 [aws]
 symbol = " "
 
@@ -80,6 +97,9 @@ symbol = " "
 
 [hostname]
 ssh_symbol = " "
+ssh_only = false
+format = "[$ssh_symbol$hostname]($style) "
+aliases = { {{- range $i, $k := keys $hostAliases | sortAlpha }}{{ if $i }},{{ end }} {{ $k | quote }} = {{ get $hostAliases $k | quote }}{{ end }} }
 
 [java]
 symbol = " "

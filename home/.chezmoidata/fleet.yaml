@@ -1,0 +1,12 @@
+# Machine and user names shown in the prompt (Starship), the Claude status
+# line and SSH aliases. Star Wars droids for the exe.dev fleet.
+fleet:
+  # exe.dev VMs: short name -> VM name. Gives `ssh <short>` and shows <short>
+  # instead of the VM name in prompts. exe.dev VM names need 5+ characters.
+  exe:
+    r2d2: levin-r2d2
+  # Other machines: hostname -> name shown in prompts.
+  hosts: {}
+  # Login users -> name shown in prompts (exe.dev always logs in as exedev).
+  users:
+    exedev: levin
