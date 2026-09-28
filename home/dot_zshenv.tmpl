@@ -15,11 +15,6 @@ if [[ -z "$XDG_RUNTIME_DIR" && -d "/run/user/$(id -u)" ]]; then
 fi
 {{- end }}
 
-{{- if eq .profile "exe" }}
-
-# gh talks to the exe.dev GitHub integration instead of needing a token.
-export GH_HOST=github.int.exe.xyz
-{{- end }}
 
 # Vite+ bin (https://viteplus.dev)
 [ -f "$HOME/.vite-plus/env" ] && . "$HOME/.vite-plus/env"

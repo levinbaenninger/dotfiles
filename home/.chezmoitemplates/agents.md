@@ -18,7 +18,7 @@ Source: ~/dotfiles/home/.chezmoitemplates/agents.md. Edit there, then `chezmoi a
 {{ else if eq .profile "exe" -}}
 - An exe.dev VM (Ubuntu, user `exedev`, passwordless sudo). Packages come from Homebrew on Linux.
 - exe.dev HTTPS proxy: https://exe.dev/docs/proxy.md. Only use documented exe.dev features (https://exe.dev/docs.md); undocumented local endpoints are internal and unstable.
-- GitHub goes through the exe.dev GitHub integration; there is no GitHub token on the VM. Use normal `github.com` URLs: git rewrites them for {{ range $i, $o := .github.owners }}{{ if $i }}, {{ end }}`{{ $o }}`{{ end }} repos, and `gh` uses `GH_HOST=github.int.exe.xyz`. If access fails, the repo needs an integration (`ssh exe.dev integrations add github ...`); ask the user.
+- GitHub: `gh` is logged in and is git's credential helper; use normal `github.com` URLs.
 - Dev servers: listen on `0.0.0.0` with a port between 3000 and 9999, then open `https://{{ .chezmoi.hostname }}.exe.xyz:<port>/` (private to the user; exe.dev handles TLS). Vite needs `server.allowedHosts: ['.exe.xyz']`, Next.js `allowedDevOrigins`.
 {{ else -}}
 - A Linux VM. Packages come from Homebrew on Linux (`~/dotfiles/Brewfile`).

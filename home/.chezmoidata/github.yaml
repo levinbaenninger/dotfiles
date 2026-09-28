@@ -1,5 +1,0 @@
-# GitHub owners (users/orgs) whose repos go through the exe.dev GitHub
-# integration on exe.dev VMs. Repos of other owners stay on github.com.
-github:
-  owners:
-    - levinbaenninger
