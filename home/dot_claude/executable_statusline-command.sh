@@ -1,0 +1,97 @@
+#!/usr/bin/env bash
+# Claude Code status line
+# Line 1 (location):  user@host  cwd | branch
+# Line 2 (session):   [Model · effort] | ctx used/win (%) | $cost | +adds -dels | dur
+input=$(cat)
+# jq may come from Homebrew, which isn't on PATH in every non-login shell.
+export PATH="$PATH:/opt/homebrew/bin:/usr/local/bin:/home/linuxbrew/.linuxbrew/bin"
+
+# --- colors (bright variants for readable contrast on dark bg) ---
+G='\033[92m'    # bright green  - user@host, additions
+B='\033[96m'    # bright cyan   - cwd, ctx normal
+M='\033[95m'    # bright magenta- branch
+W='\033[97m'    # bright white  - model, cost
+SEP='\033[37m'  # white         - separators / brackets
+YEL='\033[93m'  # bright yellow - effort, ctx warn
+RED='\033[91m'  # bright red    - deletions, ctx danger
+RST='\033[0m'
+
+# --- stdin fields ---
+cwd=$(echo "$input"   | jq -r '.workspace.current_dir // .cwd // empty')
+model=$(echo "$input" | jq -r '.model.display_name // empty')
+cost=$(echo "$input"  | jq -r '.cost.total_cost_usd // 0')
+dur_ms=$(echo "$input"| jq -r '.cost.total_duration_ms // 0')
+adds=$(echo "$input"  | jq -r '.cost.total_lines_added // 0')
+dels=$(echo "$input"  | jq -r '.cost.total_lines_removed // 0')
+transcript=$(echo "$input" | jq -r '.transcript_path // empty')
+
+user=$(whoami)
+host=$(hostname -s)
+home="$HOME"
+cwd_display="${cwd/#$home/~}"
+
+# --- git branch (omit if not a repo) ---
+branch=$(git -C "$cwd" --no-optional-locks branch --show-current 2>/dev/null)
+
+# --- effort from env (omit if unset) ---
+effort="$CLAUDE_EFFORT"
+
+# --- context: prefer the fields Claude Code provides, else read the transcript ---
+WINDOW=$(echo "$input" | jq -r '.context_window.context_window_size // empty')
+if [ -z "$WINDOW" ]; then
+  case "$(echo "$input" | jq -r '.model.id // empty') $model" in
+    *1m*|*1M*) WINDOW=1000000 ;;
+    *) WINDOW=200000 ;;
+  esac
+fi
+used=$(echo "$input" | jq -r '.context_window.current_usage
+  | if . == null then empty else
+      (.input_tokens // 0) + (.cache_creation_input_tokens // 0) + (.cache_read_input_tokens // 0)
+    end')
+if [ -z "$used" ] && [ -n "$transcript" ] && [ -f "$transcript" ]; then
+  # tac is GNU, tail -r is BSD; either reads the transcript newest-first.
+  if command -v tac >/dev/null 2>&1; then rev_cat="tac"; else rev_cat="tail -r"; fi
+  ux=$($rev_cat "$transcript" 2>/dev/null | grep -m1 '"usage"')
+  if [ -n "$ux" ]; then
+    used=$(echo "$ux" | jq '
+      (.message.usage // .usage) as $u
+      | (($u.input_tokens // 0)
+        + ($u.cache_creation_input_tokens // 0)
+        + ($u.cache_read_input_tokens // 0))' 2>/dev/null)
+  fi
+fi
+[ -z "$used" ] && used=0
+pct=$(( used * 100 / WINDOW ))
+[ "$pct" -gt 100 ] && pct=100
+ctx_col="$B"
+[ "$pct" -ge 70 ] && ctx_col="$YEL"
+[ "$pct" -ge 90 ] && ctx_col="$RED"
+# humanize used tokens -> k
+if [ "$used" -ge 1000 ]; then used_h="$(( used / 1000 ))k"; else used_h="$used"; fi
+if [ "$WINDOW" -ge 1000000 ]; then win_h="$(( WINDOW / 1000000 ))M"; else win_h="$(( WINDOW / 1000 ))k"; fi
+
+# --- duration humanize ---
+dur_s=$(( dur_ms / 1000 ))
+if   [ "$dur_s" -ge 3600 ]; then dur="$(( dur_s/3600 ))h$(( (dur_s%3600)/60 ))m"
+elif [ "$dur_s" -ge 60 ];   then dur="$(( dur_s/60 ))m"
+else dur="${dur_s}s"; fi
+
+# --- cost format ---
+cost_f=$(printf '$%.2f' "$cost")
+
+# ============ line 1: location ============
+printf "${G}%s@%s${RST}  ${B}%s${RST}" "$user" "$host" "$cwd_display"
+[ -n "$branch" ] && printf " ${SEP}|${RST} ${M}%s${RST}" "$branch"
+printf "\n"
+
+# ============ line 2: session ============
+if [ -n "$effort" ]; then
+  printf "${SEP}[${RST}${W}%s${RST} ${SEP}·${RST} ${YEL}%s${SEP}]${RST}" "$model" "$effort"
+else
+  printf "${SEP}[${RST}${W}%s${RST}${SEP}]${RST}" "$model"
+fi
+printf " ${SEP}|${RST} ${ctx_col}ctx %s/%s (%s%%)${RST}" "$used_h" "$win_h" "$pct"
+printf " ${SEP}|${RST} ${W}%s${RST}" "$cost_f"
+printf " ${SEP}|${RST} ${G}+%s${RST} ${RED}-%s${RST}" "$adds" "$dels"
+printf " ${SEP}|${RST} ${W}%s${RST}" "$dur"
+printf "\n"

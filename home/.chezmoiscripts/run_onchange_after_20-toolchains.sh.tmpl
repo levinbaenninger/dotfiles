@@ -1,0 +1,27 @@
+#!/usr/bin/env bash
+# Toolchains that don't come from Homebrew. Each step is skipped when already
+# installed, so this is safe to re-run.
+set -euo pipefail
+export PATH="$HOME/.local/bin:{{ .brewPrefix }}/bin:$PATH"
+
+# Vite+: manages node, npm, pnpm and bun.
+if [[ ! -x "$HOME/.vite-plus/bin/vp" ]]; then
+  echo "==> Installing Vite+"
+  curl -fsSL https://vite.plus | VP_HOME="$HOME/.vite-plus" VP_NODE_MANAGER=yes bash
+fi
+# shellcheck disable=SC1091
+. "$HOME/.vite-plus/env"
+
+# Claude Code (native installer, self-updating).
+if ! command -v claude >/dev/null; then
+  echo "==> Installing Claude Code"
+  curl -fsSL https://claude.ai/install.sh | bash
+fi
+
+{{ if ne .profile "mac" -}}
+# Codex CLI (on macOS it comes from the `codex` cask).
+if ! command -v codex >/dev/null; then
+  echo "==> Installing Codex CLI"
+  npm install -g @openai/codex
+fi
+{{ end -}}

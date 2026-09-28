@@ -1,0 +1,73 @@
+#!/usr/bin/env bash
+# Syncs the shared agent setup from .chezmoidata/agents.yaml:
+#   skills  -> ~/.agents/skills (Codex reads it directly), linked into ~/.claude/skills
+#   plugins -> Claude Code plugins
+#   MCP     -> Claude Code user scope (Codex gets them via ~/.codex/config.toml)
+#   hooks   -> herdr's Claude/Codex integrations
+# Re-runs whenever that data (or the work flag) changes.
+# data hash: {{ list .agents.skills .agents.claude .agents.mcp .work | toJson | sha256sum }}
+set -euo pipefail
+export PATH="$HOME/.local/bin:{{ .brewPrefix }}/bin:/usr/local/bin:$PATH"
+# shellcheck disable=SC1091
+[[ -f "$HOME/.vite-plus/env" ]] && . "$HOME/.vite-plus/env"
+export DO_NOT_TRACK=1 DISABLE_TELEMETRY=1
+
+# --- Skills ------------------------------------------------------------------
+echo "==> Agent skills"
+mkdir -p "$HOME/.claude/skills"
+{{- range .agents.skills }}
+npx -y skills add {{ .source | squote }} --global --agent codex --yes
+{{- range .skills }} --skill {{ . | squote }}{{ end }}
+{{- if .claude }}
+# shellcheck disable=SC2041
+for skill in {{ range .skills }}{{ . | squote }} {{ end }}; do
+  ln -sfn "../../.agents/skills/$skill" "$HOME/.claude/skills/$skill"
+done
+{{- end }}
+{{- end }}
+
+# --- Claude Code: plugins & MCP servers ---------------------------------------
+if command -v claude >/dev/null; then
+  echo "==> Claude Code plugins"
+  # A fresh install doesn't know any marketplace until Claude first starts.
+{{- range .agents.claude.marketplaces }}
+  claude plugin marketplace add {{ . | squote }} >/dev/null 2>&1 || true
+{{- end }}
+  claude plugin marketplace update >/dev/null 2>&1 || true
+{{- range .agents.claude.plugins }}
+  claude plugin install {{ . | squote }} || echo "plugin {{ . }} failed to install" >&2
+{{- end }}
+
+  echo "==> Claude Code MCP servers"
+  # Only touch servers whose definition changed: re-adding one resets its
+  # OAuth login.
+  add_mcp() {
+    local current
+    current=$(jq -cS --arg n "$1" '.mcpServers[$n] // empty' "$HOME/.claude.json" 2>/dev/null || true)
+    [[ "$current" == "$(jq -cS . <<<"$2")" ]] && return 0
+    claude mcp remove --scope user "$1" >/dev/null 2>&1 || true
+    claude mcp add-json --scope user "$1" "$2"
+  }
+{{- $servers := deepCopy .agents.mcp.common }}
+{{- if .work }}
+{{-   $servers = merge $servers (deepCopy .agents.mcp.work) }}
+{{- end }}
+{{- range $name, $srv := $servers }}
+{{-   $json := dict }}
+{{-   if hasKey $srv "url" }}
+{{-     $json = dict "type" "http" "url" $srv.url }}
+{{-   else }}
+{{-     $json = dict "type" "stdio" "command" $srv.command "args" ($srv.args | default list) }}
+{{-   end }}
+  add_mcp {{ $name | squote }} {{ toJson $json | squote }}
+{{- end }}
+else
+  echo "claude not on PATH; skipping plugins and MCP servers" >&2
+fi
+
+# --- herdr hooks ---------------------------------------------------------------
+if command -v herdr >/dev/null; then
+  echo "==> herdr integrations"
+  herdr integration install claude || true
+  herdr integration install codex || true
+fi

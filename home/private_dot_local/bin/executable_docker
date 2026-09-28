@@ -1,0 +1,4 @@
+#!/bin/sh
+# Podman machines only (see .chezmoiignore): forwards `docker` to `podman` so
+# tools and agents that hardcode docker keep working.
+exec podman "$@"

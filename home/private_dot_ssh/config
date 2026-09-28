@@ -1,0 +1,7 @@
+# macOS only (see .chezmoiignore). Machine-specific hosts go in ~/.ssh/config.local.
+# OrbStack's Include must stay above any Host block.
+Include ~/.orbstack/ssh/config
+Include ~/.ssh/config.local
+
+Host *
+	IdentityAgent "~/Library/Group Containers/2BUA8C4S2C.com.1password/t/agent.sock"

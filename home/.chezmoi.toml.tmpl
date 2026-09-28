@@ -1,0 +1,65 @@
+{{- /*
+  Evaluated by `chezmoi init`. Detects which kind of machine this is and
+  records it in ~/.config/chezmoi/chezmoi.toml so templates can branch on it.
+
+  profile: mac | wsl | exe | linux
+  work:    pull work config + secrets from 1Password (vault "Work")
+  containerRuntime: docker | podman (podman gets a `docker` shim + agent note)
+
+  Non-interactive overrides (used by install.sh and the exe.dev setup script):
+    DOTFILES_PROFILE=linux DOTFILES_WORK=0 DOTFILES_CONTAINER_RUNTIME=docker \
+      chezmoi init --apply --source ~/dotfiles
+*/ -}}
+
+{{- $profile := "linux" -}}
+{{- if eq .chezmoi.os "darwin" -}}
+{{-   $profile = "mac" -}}
+{{- else if and (eq .chezmoi.os "linux") (.chezmoi.kernel.osrelease | lower | contains "microsoft") -}}
+{{-   $profile = "wsl" -}}
+{{- else if stat "/exe.dev" -}}
+{{-   $profile = "exe" -}}
+{{- end -}}
+{{- if env "DOTFILES_PROFILE" -}}
+{{-   $profile = env "DOTFILES_PROFILE" -}}
+{{- end -}}
+
+{{- $work := eq $profile "wsl" -}}
+{{- if env "DOTFILES_WORK" -}}
+{{-   $work = eq (env "DOTFILES_WORK") "1" -}}
+{{- else if stdinIsATTY -}}
+{{-   $work = promptBoolOnce . "work" "Work machine? (pulls work secrets from 1Password)" $work -}}
+{{- end -}}
+
+{{- /* The work laptop (WSL) runs Podman instead of Docker. */ -}}
+{{- $containerRuntime := ternary "podman" "docker" (eq $profile "wsl") -}}
+{{- if env "DOTFILES_CONTAINER_RUNTIME" -}}
+{{-   $containerRuntime = env "DOTFILES_CONTAINER_RUNTIME" -}}
+{{- end -}}
+
+{{- /* On WSL the 1Password CLI usually lives on the Windows side. */ -}}
+{{- $opCommand := "op" -}}
+{{- if and (eq $profile "wsl") (not (lookPath "op")) (lookPath "op.exe") -}}
+{{-   $opCommand = "op.exe" -}}
+{{- end -}}
+
+{{- $brewPrefix := "/home/linuxbrew/.linuxbrew" -}}
+{{- if eq .chezmoi.os "darwin" -}}
+{{-   $brewPrefix = ternary "/opt/homebrew" "/usr/local" (eq .chezmoi.arch "arm64") -}}
+{{- end }}
+
+# The repo lives in ~/dotfiles rather than chezmoi's default location.
+sourceDir = {{ .chezmoi.workingTree | quote }}
+
+[data]
+    profile = {{ $profile | quote }}
+    brewPrefix = {{ $brewPrefix | quote }}
+    work = {{ $work }}
+    containerRuntime = {{ $containerRuntime | quote }}
+    headless = {{ or (eq $profile "exe") (eq $profile "linux") }}
+
+[onepassword]
+    command = {{ $opCommand | quote }}
+    prompt = false
+
+[diff]
+    exclude = ["scripts"]

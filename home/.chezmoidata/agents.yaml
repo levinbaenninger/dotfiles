@@ -1,0 +1,136 @@
+# Single source of truth for the AI agent setup shared by Claude Code and Codex.
+# Rendered into ~/.claude.json (via `claude mcp`), ~/.claude/settings.json and
+# ~/.codex/config.toml by the templates and scripts in this repo.
+#
+# Nothing here may be company-specific. Work values (org names, tokens) live in
+# 1Password and reach the MCP servers through ~/.config/dotfiles/work.env,
+# which the server command sources at launch.
+
+agents:
+  mcp:
+    # Available on every machine.
+    common:
+      playwright:
+        command: npx
+        args: ["-y", "@playwright/mcp@latest"]
+      chrome-devtools:
+        command: npx
+        args: ["-y", "chrome-devtools-mcp@latest", "--no-usage-statistics"]
+      executor:
+        url: https://executor.sh/levexis/mcp
+
+    # Only on machines initialised with work=true. `sh -c` sources work.env so
+    # tokens never land in the agents' own config files (or their backups).
+    work:
+      azure-devops:
+        command: sh
+        args:
+          - -c
+          - . "$HOME/.config/dotfiles/work.env" && exec npx -y @azure-devops/mcp "$ADO_ORG"
+      sonarqube:
+        command: sh
+        args:
+          - -c
+          - . "$HOME/.config/dotfiles/work.env" && exec docker run --init --pull=always -i --rm -e SONARQUBE_TOKEN -e SONARQUBE_URL mcp/sonarqube
+
+  # Installed into ~/.agents/skills with the `skills` CLI. Codex reads that
+  # directory directly; `claude: true` also links them into ~/.claude/skills.
+  skills:
+    - source: mattpocock/skills
+      skills:
+        - ask-matt
+        - code-review
+        - codebase-design
+        - diagnosing-bugs
+        - domain-modeling
+        - grill-me
+        - grill-with-docs
+        - grilling
+        - handoff
+        - implement
+        - improve-codebase-architecture
+        - prototype
+        - research
+        - resolving-merge-conflicts
+        - setup-matt-pocock-skills
+        - tdd
+        - teach
+        - to-questionnaire
+        - to-spec
+        - to-tickets
+        - triage
+        - wait-what
+        - wayfinder
+        - wizard
+        - writing-beats
+        - writing-for-agents
+        - writing-fragments
+        - writing-shape
+      claude: false # Claude gets these from the mattpocock-skills plugin
+    - source: shadcn/improve
+      skills: [improve]
+      claude: true
+    - source: cursor/plugins
+      skills: [unslop]
+      claude: true
+
+  claude:
+    marketplaces:
+      - anthropics/claude-plugins-official
+    plugins:
+      - mattpocock-skills@claude-plugins-official
+
+    # ~/.claude/settings.json is also written by Claude itself, so it is merged
+    # rather than replaced. `defaults` only fill in missing keys (changes you
+    # make in /config stick); `managed` always win.
+    settings:
+      defaults:
+        model: opus[1m]
+        effortLevel: high
+        advisorModel: opus
+        permissions:
+          defaultMode: auto
+        disableClaudeAiConnectors: true
+        enableWorkflows: true
+        worktree:
+          baseRef: fresh
+        tui: fullscreen
+        theme: dark
+        editorMode: normal
+        inputNeededNotifEnabled: true
+        agentPushNotifEnabled: true
+        enabledPlugins:
+          mattpocock-skills@claude-plugins-official: true
+      managed:
+        statusLine:
+          type: command
+          command: bash ~/.claude/statusline-command.sh
+
+  codex:
+    # Same merge rules for ~/.codex/config.toml, which the Codex app rewrites
+    # constantly (project trust, desktop prefs, plugin state).
+    config:
+      defaults:
+        model: gpt-6-sol
+        model_reasoning_effort: medium
+        model_reasoning_summary: concise
+        model_verbosity: low
+        personality: pragmatic
+        approvals_reviewer: auto_review
+      managed:
+        features:
+          hooks: true
+          memories: false
+        memories:
+          generate_memories: false
+          use_memories: false
+    # Extra per-server Codex settings merged onto the MCP definitions above.
+    mcp_overrides:
+      chrome-devtools:
+        startup_timeout_sec: 30
+      executor:
+        tools:
+          skills:
+            approval_mode: approve
+          execute:
+            approval_mode: approve

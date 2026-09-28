@@ -1,0 +1,16 @@
+{{ if ne .profile "mac" -}}
+#!/usr/bin/env bash
+# Make Homebrew's zsh the login shell (Linux only; macOS already defaults to zsh).
+set -euo pipefail
+zsh_path="{{ .brewPrefix }}/bin/zsh"
+[[ -x "$zsh_path" ]] || exit 0
+[[ "$(getent passwd "$USER" | cut -d: -f7)" == "$zsh_path" ]] && exit 0
+
+if sudo -n true 2>/dev/null || [[ -t 0 ]]; then
+  grep -qxF "$zsh_path" /etc/shells || echo "$zsh_path" | sudo tee -a /etc/shells >/dev/null
+  sudo chsh -s "$zsh_path" "$USER"
+  echo "Login shell set to $zsh_path (takes effect on next login)."
+else
+  echo "Run this once to switch to zsh: sudo chsh -s $zsh_path $USER" >&2
+fi
+{{ end -}}

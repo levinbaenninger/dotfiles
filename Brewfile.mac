@@ -1,0 +1,72 @@
+# macOS-only formulae and apps. Installed after the portable Brewfile.
+
+# System
+brew "mole"
+
+# Build toolchains & runtimes
+brew "cocoapods"
+brew "dotnet@8"
+brew "dotnet@9", link: true
+brew "gcc"
+
+# Documents & media
+brew "ghostscript"
+brew "imagemagick"
+brew "tectonic"
+
+# Security & network
+brew "gnupg"
+brew "openvpn"
+
+# Editors & IDEs
+cask "cursor"
+cask "jetbrains-toolbox"
+cask "visual-studio-code"
+cask "zed"
+
+# Terminals
+cask "ghostty"
+
+# AI
+cask "chatgpt"
+cask "claude"
+cask "codex"
+cask "opencode-desktop"
+
+# Productivity & Window Management
+cask "dockdoor"
+cask "hiddenbar"
+cask "logi-options+"
+cask "raycast"
+cask "rectangle"
+cask "stats"
+
+# Development Tools
+cask "burp-suite"
+cask "ngrok"
+cask "orbstack"
+cask "yaak"
+
+# Design
+cask "figma"
+
+# Communication
+cask "discord"
+cask "slack"
+
+# Notes & Project Management
+cask "linear"
+cask "notion"
+cask "obsidian"
+
+# Browsers
+cask "google-chrome"
+cask "helium-browser"
+cask "zen"
+
+# Security
+cask "1password"
+cask "1password-cli"
+
+# Fonts
+cask "font-fira-code-nerd-font"

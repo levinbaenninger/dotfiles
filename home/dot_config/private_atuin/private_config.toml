@@ -1,0 +1,8 @@
+# Full reference: https://docs.atuin.sh/configuration/config/
+enter_accept = true
+
+[sync]
+records = true
+
+[ai]
+enabled = true

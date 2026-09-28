@@ -1,0 +1,11 @@
+# Work identity, rendered only on work machines. Values come from 1Password
+# (op://Work/dotfiles). Included by ~/.gitconfig for Azure DevOps remotes and
+# for every repo under ~/work/.
+[user]
+	name = {{ onepasswordRead "op://Work/dotfiles/git_name" }}
+	email = {{ onepasswordRead "op://Work/dotfiles/git_email" }}
+[commit]
+	# The personal signing key shouldn't sign work commits.
+	gpgsign = false
+[tag]
+	gpgsign = false

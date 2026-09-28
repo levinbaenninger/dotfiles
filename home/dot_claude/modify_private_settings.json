@@ -1,0 +1,18 @@
+{{- /* chezmoi:modify-template */ -}}
+{{- /* Merges .agents.claude.settings (see .chezmoidata/agents.yaml) into the
+       settings.json Claude maintains itself. Leaves the file byte-for-byte
+       alone when nothing would change, so Claude's key order doesn't show up
+       as a diff. */ -}}
+{{- $cur := dict -}}
+{{- if .chezmoi.stdin | trim -}}
+{{-   $cur = fromJson .chezmoi.stdin -}}
+{{- end -}}
+{{- $want := .agents.claude.settings -}}
+{{- $out := deepCopy $cur -}}
+{{- $out = includeTemplate "merge-into" (dict "dst" $out "src" $want.defaults "force" false "emit" true) | fromYaml -}}
+{{- $out = includeTemplate "merge-into" (dict "dst" $out "src" $want.managed "force" true "emit" true) | fromYaml -}}
+{{- if and (.chezmoi.stdin | trim) (eq (toJson $out) (toJson $cur)) -}}
+{{-   .chezmoi.stdin -}}
+{{- else -}}
+{{-   toPrettyJson "  " $out }}
+{{ end -}}

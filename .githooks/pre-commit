@@ -1,0 +1,37 @@
+#!/usr/bin/env bash
+# Blocks commits that would publish work-sensitive strings in this public repo.
+# Enable once per clone:  git config core.hooksPath .githooks
+#
+# Checks staged additions against:
+#   - values in ~/.config/dotfiles/work.env (rendered from 1Password on work machines)
+#   - ~/.config/dotfiles/forbidden-words (optional, untracked, one string per line,
+#     e.g. company or ADO org names; add it on machines without work.env)
+# Then runs ggshield if it's installed and authenticated.
+set -euo pipefail
+
+added=$(git diff --cached --no-color --unified=0 | grep '^+' | grep -v '^+++' || true)
+[[ -z "$added" ]] && exit 0
+
+patterns=()
+if [[ -f "$HOME/.config/dotfiles/work.env" ]]; then
+  while IFS= read -r value; do
+    [[ ${#value} -ge 4 ]] && patterns+=("$value")
+  done < <(sed -nE "s/^export [A-Z_]+='(.*)'$/\1/p" "$HOME/.config/dotfiles/work.env")
+fi
+if [[ -f "$HOME/.config/dotfiles/forbidden-words" ]]; then
+  while IFS= read -r word; do
+    [[ -n "$word" && "$word" != \#* ]] && patterns+=("$word")
+  done < "$HOME/.config/dotfiles/forbidden-words"
+fi
+
+for p in "${patterns[@]}"; do
+  if grep -qiF -- "$p" <<<"$added"; then
+    echo "pre-commit: staged changes contain a work-sensitive string (from work.env/forbidden-words)." >&2
+    echo "Move it to 1Password and reference it with onepasswordRead instead." >&2
+    exit 1
+  fi
+done
+
+if command -v ggshield >/dev/null && ggshield api-status >/dev/null 2>&1; then
+  ggshield secret scan pre-commit
+fi

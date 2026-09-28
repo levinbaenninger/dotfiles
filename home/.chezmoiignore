@@ -1,0 +1,17 @@
+{{- if not .work }}
+# Work-only files: never rendered on personal machines, so 1Password's Work
+# vault is only touched where it exists.
+.config/dotfiles/work.env
+.config/git/work.gitconfig
+.npmrc
+{{- end }}
+
+{{- if ne .profile "mac" }}
+# The SSH config wires in the 1Password agent socket and OrbStack, both macOS.
+.ssh
+.ssh/**
+{{- end }}
+
+{{- if ne .containerRuntime "podman" }}
+.local/bin/docker
+{{- end }}

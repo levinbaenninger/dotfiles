@@ -1,0 +1,17 @@
+{{- /* Recursively merges .src into the map .dst and, with emit=true, renders
+       the result as YAML (includeTemplate hands the template a copy, so the
+       caller has to read the result back with fromYaml).
+       force=false: only fills keys missing from dst (defaults).
+       force=true:  src wins (managed settings).
+       Written by hand because sprig's merge treats false/0/"" as missing. */ -}}
+{{- $dst := .dst -}}
+{{- $force := .force -}}
+{{- range $k, $v := .src -}}
+{{-   $cur := get $dst $k -}}
+{{-   if and (hasKey $dst $k) (kindIs "map" $cur) (kindIs "map" $v) -}}
+{{-     template "merge-into" (dict "dst" $cur "src" $v "force" $force) -}}
+{{-   else if or $force (not (hasKey $dst $k)) -}}
+{{-     $_ := set $dst $k (deepCopy $v) -}}
+{{-   end -}}
+{{- end -}}
+{{- if get . "emit" }}{{ toYaml $dst }}{{ end -}}

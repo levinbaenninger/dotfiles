@@ -1,0 +1,75 @@
+[user]
+	name = Levin Bänninger
+	email = levin@baenninger.me
+	signingkey = ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIMuaNccuT9k3GO2o9biMGqvHcyz6GGKvtvtIODgc1Dlg
+[core]
+	pager = delta
+{{- if eq .profile "wsl" }}
+	# Use Windows' OpenSSH so the 1Password agent on the Windows side answers.
+	sshCommand = ssh.exe
+{{- end }}
+[interactive]
+	diffFilter = delta --color-only
+[delta]
+	navigate = true
+[merge]
+	conflictstyle = zdiff3
+[diff]
+	algorithm = histogram
+	colorMoved = default
+[rerere]
+	enabled = true
+[fetch]
+	prune = true
+[push]
+	autoSetupRemote = true
+[init]
+	defaultBranch = main
+[pull]
+	rebase = true
+[rebase]
+	autoStash = true
+	updateRefs = true
+
+{{- /* Commit signing goes through the 1Password SSH agent, which only exists
+       where the desktop app runs. Headless VMs have no key, so no signing. */}}
+{{- $signer := "" }}
+{{- if eq .profile "mac" }}
+{{-   $signer = "/Applications/1Password.app/Contents/MacOS/op-ssh-sign" }}
+{{- else if eq .profile "wsl" }}
+{{-   $signer = lookPath "op-ssh-sign-wsl.exe" | default (lookPath "op-ssh-sign-wsl") }}
+{{- end }}
+{{- if $signer }}
+[gpg]
+	format = ssh
+[gpg "ssh"]
+	program = {{ $signer | quote }}
+[commit]
+	gpgsign = true
+[tag]
+	gpgsign = true
+{{- end }}
+
+{{- if ne .profile "exe" }}
+{{-   $gh := joinPath .brewPrefix "bin/gh" }}
+[credential "https://github.com"]
+	helper =
+	helper = !{{ $gh }} auth git-credential
+[credential "https://gist.github.com"]
+	helper =
+	helper = !{{ $gh }} auth git-credential
+{{- end }}
+
+{{- if .work }}
+
+# Work identity (name/email from 1Password) for Azure DevOps remotes and for
+# anything under ~/work/. Everything else commits as the personal identity.
+[includeIf "gitdir:~/work/"]
+	path = ~/.config/git/work.gitconfig
+[includeIf "hasconfig:remote.*.url:https://dev.azure.com/**"]
+	path = ~/.config/git/work.gitconfig
+[includeIf "hasconfig:remote.*.url:git@ssh.dev.azure.com:*/**"]
+	path = ~/.config/git/work.gitconfig
+[includeIf "hasconfig:remote.*.url:https://*.visualstudio.com/**"]
+	path = ~/.config/git/work.gitconfig
+{{- end }}

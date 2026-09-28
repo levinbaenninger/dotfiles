@@ -1,0 +1,27 @@
+# Managed by chezmoi. Read by every zsh, including non-interactive ones
+# (`ssh host cmd`, agent tool calls), so keep it to environment only.
+{{- if ne .profile "mac" }}
+{{- /* On macOS, /etc/zprofile's path_helper reorders PATH after this file,
+       so Homebrew's PATH setup stays in .zshrc there. */}}
+
+if [[ -x {{ .brewPrefix }}/bin/brew && -z "$HOMEBREW_PREFIX" ]]; then
+  eval "$({{ .brewPrefix }}/bin/brew shellenv zsh)"
+fi
+export PATH="$HOME/.local/bin:$PATH"
+
+# PAM doesn't set this on exe.dev/containers; systemctl --user needs it.
+if [[ -z "$XDG_RUNTIME_DIR" && -d "/run/user/$(id -u)" ]]; then
+  export XDG_RUNTIME_DIR="/run/user/$(id -u)"
+fi
+{{- end }}
+
+# Vite+ bin (https://viteplus.dev)
+[ -f "$HOME/.vite-plus/env" ] && . "$HOME/.vite-plus/env"
+{{- if eq .containerRuntime "podman" }}
+
+# Point Docker-API clients (testcontainers, compose, SDKs) at Podman's socket.
+# Enable it once with: systemctl --user enable --now podman.socket
+if [[ -z "$DOCKER_HOST" && -S "${XDG_RUNTIME_DIR:-/run/user/$(id -u)}/podman/podman.sock" ]]; then
+  export DOCKER_HOST="unix://${XDG_RUNTIME_DIR:-/run/user/$(id -u)}/podman/podman.sock"
+fi
+{{- end }}

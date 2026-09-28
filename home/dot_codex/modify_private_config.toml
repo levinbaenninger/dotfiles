@@ -1,0 +1,35 @@
+{{- /* chezmoi:modify-template */ -}}
+{{- /* Merges .agents.codex.config and the shared MCP servers (see
+       .chezmoidata/agents.yaml) into the config.toml the Codex app maintains.
+       Leaves the file untouched when nothing would change. */ -}}
+{{- $cur := dict -}}
+{{- if .chezmoi.stdin | trim -}}
+{{-   $cur = fromToml .chezmoi.stdin -}}
+{{- end -}}
+
+{{- $mcp := dict -}}
+{{- range $name, $srv := .agents.mcp.common -}}
+{{-   $_ := set $mcp $name (deepCopy $srv) -}}
+{{- end -}}
+{{- if .work -}}
+{{-   range $name, $srv := .agents.mcp.work -}}
+{{-     $_ := set $mcp $name (deepCopy $srv) -}}
+{{-   end -}}
+{{- end -}}
+{{- range $name, $extra := .agents.codex.mcp_overrides -}}
+{{-   if hasKey $mcp $name -}}
+{{-     $_ := set $mcp $name (includeTemplate "merge-into" (dict "dst" (get $mcp $name) "src" $extra "force" true "emit" true) | fromYaml) -}}
+{{-   end -}}
+{{- end -}}
+
+{{- $want := .agents.codex.config -}}
+{{- $managed := deepCopy $want.managed -}}
+{{- $_ := set $managed "mcp_servers" $mcp -}}
+{{- $out := deepCopy $cur -}}
+{{- $out = includeTemplate "merge-into" (dict "dst" $out "src" $want.defaults "force" false "emit" true) | fromYaml -}}
+{{- $out = includeTemplate "merge-into" (dict "dst" $out "src" $managed "force" true "emit" true) | fromYaml -}}
+{{- if and (.chezmoi.stdin | trim) (eq (toJson $out) (toJson $cur)) -}}
+{{-   .chezmoi.stdin -}}
+{{- else -}}
+{{-   toToml $out -}}
+{{- end -}}
