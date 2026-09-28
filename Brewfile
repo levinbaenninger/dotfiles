@@ -6,7 +6,6 @@
 brew "atuin"
 brew "fzf"
 brew "starship"
-brew "tmux"
 brew "zsh"
 brew "zsh-autosuggestions"
 brew "zsh-syntax-highlighting"
@@ -28,7 +27,6 @@ brew "bandwhich"
 brew "btop"
 brew "duf"
 brew "dust"
-brew "gdu"
 brew "gping"
 brew "procs"
 
@@ -49,7 +47,6 @@ brew "herdr"
 
 # Development Utilities
 brew "ast-grep"
-brew "biome"
 brew "cloudflared"
 brew "httpie"
 brew "hyperfine"

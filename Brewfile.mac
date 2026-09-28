@@ -4,7 +4,6 @@
 brew "mole"
 
 # Build toolchains & runtimes
-brew "cocoapods"
 brew "dotnet"
 brew "gcc"
 
