@@ -5,8 +5,12 @@ fleet:
   # instead of the VM name in prompts. exe.dev VM names need 5+ characters.
   exe:
     r2d2: levin-r2d2
-  # Other machines: hostname -> name shown in prompts.
-  hosts: {}
+  # Other machines: hostname -> name shown in prompts. The Mac's hostname
+  # changes when it's renamed, so every spelling it may report is listed.
+  hosts:
+    MacBook-Pro-Levin: Millennium Falcon
+    Millenium-Falcon: Millennium Falcon
+    Millennium-Falcon: Millennium Falcon
   # Login users -> name shown in prompts (exe.dev always logs in as exedev).
   users:
     exedev: levin
