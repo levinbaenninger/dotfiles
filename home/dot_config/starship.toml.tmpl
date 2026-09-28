@@ -98,7 +98,7 @@ symbol = " "
 [hostname]
 ssh_symbol = " "
 ssh_only = false
-format = "[$ssh_symbol$hostname]($style) "
+format = "[$hostname]($style) [$ssh_symbol]($style)"
 aliases = { {{- range $i, $k := keys $hostAliases | sortAlpha }}{{ if $i }},{{ end }} {{ $k | quote }} = {{ get $hostAliases $k | quote }}{{ end }} }
 
 [java]
