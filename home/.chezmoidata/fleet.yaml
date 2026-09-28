@@ -8,8 +8,6 @@ fleet:
   # Other machines: hostname -> name shown in prompts. The Mac's hostname
   # changes when it's renamed, so every spelling it may report is listed.
   hosts:
-    MacBook-Pro-Levin: falcon
-    Millenium-Falcon: falcon
     Millennium-Falcon: falcon
   # Login users -> name shown in prompts (exe.dev always logs in as exedev).
   users:
