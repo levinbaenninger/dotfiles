@@ -4,3 +4,7 @@
 # Named 99-path so it sorts after Ubuntu's 99-environment.conf, which resets
 # PATH from /etc/environment.
 PATH={{ .chezmoi.homeDir }}/.vite-plus/bin:{{ .chezmoi.homeDir }}/.local/bin:{{ .brewPrefix }}/bin:{{ .brewPrefix }}/sbin:${PATH}
+{{- if eq .profile "exe" }}
+# gh (e.g. PRs opened by agents in T3) uses the exe.dev GitHub integration.
+GH_HOST=github.int.exe.xyz
+{{- end }}

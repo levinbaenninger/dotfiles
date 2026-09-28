@@ -50,6 +50,17 @@
 	gpgsign = true
 {{- end }}
 
+{{- if eq .profile "exe" }}
+
+# exe.dev: your own repos go through the exe.dev GitHub integration, so no
+# GitHub token lives on the VM. Keep using github.com URLs; git rewrites them.
+{{-   range .github.owners }}
+[url "https://github.int.exe.xyz/{{ . }}/"]
+	insteadOf = https://github.com/{{ . }}/
+	insteadOf = git@github.com:{{ . }}/
+{{-   end }}
+{{- end }}
+
 {{- if ne .profile "exe" }}
 {{-   $gh := joinPath .brewPrefix "bin/gh" }}
 [credential "https://github.com"]
