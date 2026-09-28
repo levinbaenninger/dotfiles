@@ -3,5 +3,9 @@
 Include ~/.orbstack/ssh/config
 Include ~/.ssh/config.local
 
+# exe.dev fleet (Star Wars droids): `ssh r2d2`
+Host r2d2
+	HostName levin-r2d2.exe.xyz
+
 Host *
 	IdentityAgent "~/Library/Group Containers/2BUA8C4S2C.com.1password/t/agent.sock"
