@@ -5,13 +5,9 @@
 {{- range $short, $vm := .fleet.exe }}{{ $_ := set $hostAliases $vm $short }}{{ end }}
 {{- range $host, $short := .fleet.hosts }}{{ $_ := set $hostAliases $host $short }}{{ end }}
 
-# Always show which machine this is: OS icon + user@host (aliased from
-# .chezmoidata/fleet.yaml), e.g. " levin@r2d2 ~/source/echo".
-format = "$os$username$hostname$all"
-
-[os]
-disabled = false
-style = "bold blue"
+# Always show which machine this is: user@host (aliased from
+# .chezmoidata/fleet.yaml), e.g. "levin@r2d2 ~/source/echo".
+format = "$username$hostname$all"
 
 [username]
 format = "[$user]($style)@"
@@ -130,54 +126,6 @@ symbol = " "
 
 [ocaml]
 symbol = " "
-
-[os.symbols]
-Alpaquita = " "
-Alpine = " "
-AlmaLinux = " "
-Amazon = " "
-Android = " "
-AOSC = " "
-Arch = " "
-Artix = " "
-CachyOS = " "
-CentOS = " "
-Debian = " "
-DragonFly = " "
-Emscripten = " "
-EndeavourOS = " "
-Fedora = " "
-FreeBSD = " "
-Garuda = "󰛓 "
-Gentoo = " "
-HardenedBSD = "󰞌 "
-Illumos = "󰈸 "
-Kali = " "
-Linux = " "
-Mabox = " "
-Macos = " "
-Manjaro = " "
-Mariner = " "
-MidnightBSD = " "
-Mint = " "
-NetBSD = " "
-NixOS = " "
-Nobara = " "
-OpenBSD = "󰈺 "
-openSUSE = " "
-OracleLinux = "󰌷 "
-Pop = " "
-Raspbian = " "
-Redhat = " "
-RedHatEnterprise = " "
-RockyLinux = " "
-Redox = "󰀘 "
-Solus = "󰠳 "
-SUSE = " "
-Ubuntu = " "
-Unknown = " "
-Void = " "
-Windows = "󰍲 "
 
 [package]
 symbol = "󰏗 "
