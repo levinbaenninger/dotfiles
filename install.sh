@@ -30,7 +30,8 @@ main() {
     log "Installing apt prerequisites"
     sudo apt-get update -qq
     sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq \
-      build-essential procps curl file git ca-certificates
+      build-essential procps curl file git ca-certificates \
+      libsecret-1-0 # needed by the Azure DevOps MCP server's auth library
   fi
 
   # 2. Homebrew.
