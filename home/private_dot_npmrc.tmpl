@@ -1,13 +1,13 @@
 ; Azure Artifacts npm auth, rendered only on work machines (mode 0600).
-; Values come from 1Password (op://Work/dotfiles):
+; Values come from 1Password (Work/dotfiles, see .chezmoitemplates/work-secret):
 ;   ado_org    Azure DevOps organization
 ;   npm_feeds  feeds, comma/space separated: "feed" (org-scoped) or "project/feed"
 ;   npm_pat    PAT with Packaging (Read) scope
 ; Projects keep their own .npmrc with `registry=`; this file only adds credentials.
 ; To add a feed or rotate the PAT: edit the 1Password item, then `chezmoi apply`.
-{{- $org := onepasswordRead "op://Work/dotfiles/ado_org" }}
-{{- $password := onepasswordRead "op://Work/dotfiles/npm_pat" | b64enc }}
-{{- range $feed := regexSplit "[\\s,]+" (onepasswordRead "op://Work/dotfiles/npm_feeds" | trim) -1 }}
+{{- $org := includeTemplate "work-secret" (list . "ado_org") }}
+{{- $password := includeTemplate "work-secret" (list . "npm_pat") | b64enc }}
+{{- range $feed := regexSplit "[\\s,]+" (includeTemplate "work-secret" (list . "npm_feeds") | trim) -1 }}
 {{-   $path := printf "%s/_packaging/%s" $org $feed }}
 {{-   if contains "/" $feed }}
 {{-     $path = printf "%s/%s/_packaging/%s" $org (dir $feed) (base $feed) }}

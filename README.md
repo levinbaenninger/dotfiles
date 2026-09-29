@@ -112,15 +112,19 @@ To add a work secret: add a field to the 1Password item, reference it in
 `home/dot_config/dotfiles/private_work.env.tmpl` with
 `onepasswordRead "op://Work/dotfiles/<field>"`, and use `$VAR` wherever you need it.
 
-**Headless work VMs (exe.dev, Linux):** there's no 1Password app, so chezmoi
-reads the Work vault through a **1Password service account** with read access
-to the `Work` vault only. Put its token in
-`~/.config/dotfiles/op-service-account-token` (mode 0600) and run
-`DOTFILES_WORK=1 ~/dotfiles/install.sh`; that installs the `op` CLI and
-Azure CLI and renders the work config. Azure DevOps git access and the ADO MCP
-server use `az login --use-device-code` (no PAT). The token file is readable
-by anything running as the VM user, agents included; scope the service
-account to the Work vault only.
+**Headless work VMs (exe.dev, Linux):** there's no 1Password app, so the Mac
+pushes a copy of the `Work/dotfiles` item to the VM
+(`~/.config/dotfiles/work-secrets.json`, mode 0600) and chezmoi reads it from
+there:
+
+```bash
+scripts/push-work-secrets.sh c3po          # on the Mac; re-run after changing a value
+ssh c3po 'DOTFILES_WORK=1 ~/dotfiles/install.sh'   # first time only
+```
+
+Azure DevOps git access and the ADO MCP server use `az login --use-device-code`
+(no PAT). The pushed file holds the same values the rendered work files
+(`work.env`, `.npmrc`) contain anyway.
 
 **WSL prerequisites:** 1Password for Windows with the
 [WSL integration](https://developer.1password.com/docs/ssh/integrations/wsl/)

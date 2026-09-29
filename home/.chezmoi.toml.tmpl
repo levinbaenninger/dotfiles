@@ -56,15 +56,14 @@ sourceDir = {{ .chezmoi.workingTree | quote }}
     work = {{ $work }}
     containerRuntime = {{ $containerRuntime | quote }}
     headless = {{ or (eq $profile "exe") (eq $profile "linux") }}
+    # Where work secrets come from: the 1Password app, or (headless VMs) a
+    # copy pushed from the Mac by scripts/push-work-secrets.sh.
+    workSecrets = {{ ternary "file" "1password" (and $work (or (eq $profile "exe") (eq $profile "linux"))) | quote }}
 
 [onepassword]
     command = {{ $opCommand | quote }}
     prompt = false
-{{- if and $work (or (eq $profile "exe") (eq $profile "linux")) }}
-    # Headless work VMs have no 1Password app: a service account with read
-    # access to the Work vault, token in ~/.config/dotfiles/op-service-account-token.
-    mode = "service"
-{{- end }}
+
 
 [diff]
     exclude = ["scripts"]

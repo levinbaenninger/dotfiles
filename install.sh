@@ -8,8 +8,8 @@
 # Non-interactive knobs (all optional):
 #   DOTFILES_PROFILE=mac|wsl|exe|linux   override auto-detection
 #   DOTFILES_WORK=1|0                    pull work config from 1Password
-#                                        (headless Linux: needs the service account
-#                                        token in ~/.config/dotfiles/op-service-account-token)
+#                                        (headless Linux: push it first with
+#                                        scripts/push-work-secrets.sh from the Mac)
 #   DOTFILES_REPO / DOTFILES_BRANCH      clone a fork or branch
 set -euo pipefail
 
@@ -46,25 +46,12 @@ main() {
   eval "$("$brew_prefix/bin/brew" shellenv bash)"
   export HOMEBREW_NO_ENV_HINTS=1
 
-  # Headless work machines (Linux, not WSL): 1Password CLI + service account,
-  # because chezmoi reads the Work vault while rendering templates.
-  token_file="$HOME/.config/dotfiles/op-service-account-token"
-  if [[ "$os" == "Linux" && "${DOTFILES_WORK:-0}" == "1" ]] && ! grep -qi microsoft /proc/sys/kernel/osrelease; then
-    if [[ ! -s "$token_file" ]]; then
-      log "Work mode needs a 1Password service account token in $token_file (see README)"
-      exit 1
-    fi
-    OP_SERVICE_ACCOUNT_TOKEN="$(<"$token_file")"
-    export OP_SERVICE_ACCOUNT_TOKEN
-    if ! command -v op >/dev/null; then
-      log "Installing 1Password CLI"
-      arch="$(dpkg --print-architecture)"
-      curl -fsSL https://downloads.1password.com/linux/keys/1password.asc \
-        | sudo gpg --dearmor --yes --output /usr/share/keyrings/1password-archive-keyring.gpg
-      echo "deb [arch=$arch signed-by=/usr/share/keyrings/1password-archive-keyring.gpg] https://downloads.1password.com/linux/debian/$arch stable main" \
-        | sudo tee /etc/apt/sources.list.d/1password.list >/dev/null
-      sudo apt-get update -qq && sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq 1password-cli
-    fi
+  # Headless work machines (Linux, not WSL) have no 1Password app: the work
+  # values must have been pushed from the Mac first (scripts/push-work-secrets.sh).
+  if [[ "$os" == "Linux" && "${DOTFILES_WORK:-0}" == "1" ]] && ! grep -qi microsoft /proc/sys/kernel/osrelease \
+    && [[ ! -s "$HOME/.config/dotfiles/work-secrets.json" ]]; then
+    log "Work mode needs ~/.config/dotfiles/work-secrets.json; on the Mac run: scripts/push-work-secrets.sh <host>"
+    exit 1
   fi
 
   # 3. The repo itself.

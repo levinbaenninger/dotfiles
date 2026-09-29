@@ -28,6 +28,22 @@
 {{- $out := deepCopy $cur -}}
 {{- $out = includeTemplate "merge-into" (dict "dst" $out "src" $want.defaults "force" false "emit" true) | fromYaml -}}
 {{- $out = includeTemplate "merge-into" (dict "dst" $out "src" $managed "force" true "emit" true) | fromYaml -}}
+{{- /* MCP servers defined in agents.yaml replace any existing entry of the same
+       name, so stale keys (e.g. inline env secrets) don't survive the merge.
+       Only the app-owned `enabled` and `type` keys carry over. */ -}}
+{{- $servers := get $out "mcp_servers" -}}
+{{- range $name, $srv := $mcp -}}
+{{-   $new := deepCopy $srv -}}
+{{-   $old := get $servers $name -}}
+{{-   if kindIs "map" $old -}}
+{{-     range $key := list "enabled" "type" -}}
+{{-       if hasKey $old $key -}}
+{{-         $_ := set $new $key (get $old $key) -}}
+{{-       end -}}
+{{-     end -}}
+{{-   end -}}
+{{-   $_ := set $servers $name $new -}}
+{{- end -}}
 {{- if and (.chezmoi.stdin | trim) (eq (toJson $out) (toJson $cur)) -}}
 {{-   .chezmoi.stdin -}}
 {{- else -}}
