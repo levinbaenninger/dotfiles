@@ -126,6 +126,15 @@ fi
 {{ if .work -}}
 # Work secrets rendered from 1Password (see ~/.config/dotfiles/work.env)
 [ -f "$HOME/.config/dotfiles/work.env" ] && source "$HOME/.config/dotfiles/work.env"
+{{- if eq .profile "wsl" }}
+
+# Surface Azure DevOps PAT renewal problems (scripts/renew-ado-pat.sh).
+if [[ -z "$_agent_shell" && -r "${XDG_STATE_HOME:-$HOME/.local/state}/dotfiles/ado-pat.status" ]]; then
+  read -r _ado_ts _ado_level _ado_msg < "${XDG_STATE_HOME:-$HOME/.local/state}/dotfiles/ado-pat.status"
+  [[ "$_ado_level" != ok ]] && print -P "%F{yellow}⚠ $_ado_msg%f"
+  unset _ado_ts _ado_level _ado_msg
+fi
+{{- end }}
 
 {{ end -}}
 [ -f "$HOME/.zshrc.local" ] && source "$HOME/.zshrc.local"

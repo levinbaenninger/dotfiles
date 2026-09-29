@@ -1,0 +1,14 @@
+# Managed by chezmoi (WSL work laptop only). Keeps the Azure DevOps PAT in
+# 1Password alive; see ~/dotfiles/scripts/renew-ado-pat.sh.
+[Unit]
+Description=Renew the Azure DevOps PAT (1Password Work/dotfiles ado_pat) when it nears expiry
+
+[Service]
+Type=oneshot
+ExecStart={{ .chezmoi.homeDir }}/dotfiles/scripts/renew-ado-pat.sh
+Environment=DOTFILES_DIR={{ .chezmoi.homeDir }}/dotfiles
+Environment=ADO_PAT_PUSH_HOSTS={{ range $i, $short := .fleet.work }}{{ if $i }} {{ end }}{{ get $.fleet.exe $short }}.exe.xyz{{ end }}
+# Windows-side 1Password CLI and OpenSSH (for the 1Password SSH agent); user
+# services don't get the Windows PATH, so use absolute paths.
+Environment=OP={{ lookPath "op.exe" | default "op.exe" }}
+Environment=SSH={{ lookPath "ssh.exe" | default "ssh.exe" }}

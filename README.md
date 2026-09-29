@@ -129,8 +129,22 @@ field `ado_pat` in `Work/dotfiles`: the company's Conditional Access blocks
 **Wiki** (Read & write), **Packaging** (Read). Without `ado_pat`, git and the
 MCP server fall back to `az login` and npm to `npm_pat`.
 
-Renewing the PAT (Azure DevOps caps its lifetime): create a new one in Azure
-DevOps, paste it into `ado_pat`, then `scripts/push-work-secrets.sh c3po`.
+**Renewal is automatic** on the WSL work laptop, the only machine where
+`az login` is allowed. A weekly systemd timer runs `scripts/renew-ado-pat.sh`:
+
+- more than 30 days left: nothing happens;
+- otherwise it extends the PAT by a year (same value, nothing to redistribute);
+- if the org doesn't allow extending, it creates a new PAT with the same
+  scopes, stores it in `ado_pat`, pushes it to the work VMs (`work:` in
+  `.chezmoidata/fleet.yaml`) and revokes the old one.
+
+Problems (e.g. an expired `az login`) show up as a warning when a new shell
+starts. By hand: `scripts/renew-ado-pat.sh --check` (report only) or `--force`.
+The PAT must be named `dotfiles` in Azure DevOps (or set `ADO_PAT_NAME`).
+
+Setup on the laptop (once): WSL with systemd (`/etc/wsl.conf`: `[boot]`
+`systemd=true`), `az login`, and one `ssh.exe levin-c3po.exe.xyz` to accept
+the VM's host key. `chezmoi apply` then enables the timer.
 
 The pushed file holds the same values the rendered work files (`work.env`,
 `.npmrc`) contain anyway.

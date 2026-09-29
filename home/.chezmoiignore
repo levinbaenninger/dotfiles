@@ -26,3 +26,9 @@
 # Azure DevOps git credential helper: headless work VMs only.
 .local/bin/git-credential-azure-devops
 {{- end }}
+
+{{- if not (and .work (eq .profile "wsl")) }}
+# Azure DevOps PAT renewal runs on the WSL work laptop only.
+.config/systemd
+.config/systemd/**
+{{- end }}
