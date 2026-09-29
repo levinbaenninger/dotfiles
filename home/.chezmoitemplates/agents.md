@@ -23,7 +23,7 @@ Source: ~/dotfiles/home/.chezmoitemplates/agents.md. Edit there, then `chezmoi a
 {{- end }}
 - Dev servers: listen on `0.0.0.0` with a port between 3000 and 9999, then open `https://{{ .chezmoi.hostname }}.exe.xyz:<port>/` (private to the user; exe.dev handles TLS). Vite needs `server.allowedHosts: ['.exe.xyz']`, Next.js `allowedDevOrigins`.
 {{- if .work }}
-- Work machine. Azure DevOps (git over HTTPS and the ADO MCP server) authenticates through the Azure CLI; if it fails, ask the user to run `az login --use-device-code`. Don't create or store PATs.
+- Work machine. Azure DevOps (git over HTTPS and the ADO MCP server) authenticates with the PAT from 1Password (`ADO_PAT` in `~/.config/dotfiles/work.env`). Never print, log or commit it. If access fails, the PAT is likely expired: ask the user to renew it (see the dotfiles README).
 {{- end }}
 {{ else -}}
 - A Linux VM. Packages come from Homebrew on Linux (`~/dotfiles/Brewfile`).

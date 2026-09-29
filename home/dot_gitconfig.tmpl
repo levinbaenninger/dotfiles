@@ -60,13 +60,13 @@
 
 {{- if and .work .headless }}
 
-# Azure DevOps over HTTPS with tokens from `az login` (no PAT).
+# Azure DevOps over HTTPS: PAT from 1Password (ado_pat), else `az login`.
 [credential "https://dev.azure.com"]
 	helper =
-	helper = !{{ .chezmoi.homeDir }}/.local/bin/git-credential-azure-cli
+	helper = !{{ .chezmoi.homeDir }}/.local/bin/git-credential-azure-devops
 [credential "https://*.visualstudio.com"]
 	helper =
-	helper = !{{ .chezmoi.homeDir }}/.local/bin/git-credential-azure-cli
+	helper = !{{ .chezmoi.homeDir }}/.local/bin/git-credential-azure-devops
 {{- end }}
 
 {{- if .work }}

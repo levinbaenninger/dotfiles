@@ -2,11 +2,14 @@
 ; Values come from 1Password (Work/dotfiles, see .chezmoitemplates/work-secret):
 ;   ado_org    Azure DevOps organization
 ;   npm_feeds  feeds, comma/space separated: "feed" (org-scoped) or "project/feed"
-;   npm_pat    PAT with Packaging (Read) scope
+;   ado_pat    PAT incl. Packaging (Read); or npm_pat, a separate Packaging PAT
 ; Projects keep their own .npmrc with `registry=`; this file only adds credentials.
 ; To add a feed or rotate the PAT: edit the 1Password item, then `chezmoi apply`.
 {{- $org := includeTemplate "work-secret" (list . "ado_org") }}
-{{- $password := includeTemplate "work-secret" (list . "npm_pat") | b64enc }}
+{{- /* One PAT for everything if ado_pat has the Packaging scope; npm_pat otherwise. */}}
+{{- $pat := includeTemplate "work-secret" (list . "ado_pat" "") | default (includeTemplate "work-secret" (list . "npm_pat" "")) }}
+{{- if not $pat }}{{ fail "1Password Work/dotfiles needs ado_pat (with Packaging: Read) or npm_pat" }}{{ end }}
+{{- $password := $pat | b64enc }}
 {{- range $feed := regexSplit "[\\s,]+" (includeTemplate "work-secret" (list . "npm_feeds") | trim) -1 }}
 {{-   $path := printf "%s/_packaging/%s" $org $feed }}
 {{-   if contains "/" $feed }}

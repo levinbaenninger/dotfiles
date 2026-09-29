@@ -87,8 +87,8 @@ machines (`work = true`) read those values from 1Password when chezmoi renders
 the templates:
 
 - 1Password vault **Work**, item **dotfiles**, fields `git_name`, `git_email`,
-  `ado_org`, `sonarqube_url`, `sonarqube_token`, `npm_pat`, `npm_feeds`. All
-  must exist or the apply fails.
+  `ado_org`, `sonarqube_url`, `sonarqube_token`, `npm_feeds`, and `ado_pat`
+  (one PAT for git, the ADO MCP server and npm) or `npm_pat` (npm only).
 - `Brewfile.work` adds work-only packages (Azure CLI).
 - They're rendered into `~/.config/dotfiles/work.env` (mode 0600) and
   `~/.config/git/work.gitconfig`. Nothing is rendered on personal machines.
@@ -122,9 +122,18 @@ scripts/push-work-secrets.sh c3po          # on the Mac; re-run after changing a
 ssh c3po 'DOTFILES_WORK=1 ~/dotfiles/install.sh'   # first time only
 ```
 
-Azure DevOps git access and the ADO MCP server use `az login --use-device-code`
-(no PAT). The pushed file holds the same values the rendered work files
-(`work.env`, `.npmrc`) contain anyway.
+Azure DevOps git access, the ADO MCP server and the npm feeds use one PAT,
+field `ado_pat` in `Work/dotfiles`: the company's Conditional Access blocks
+`az login` from non-managed devices. Scopes: **Code** (Read & write),
+**Work Items** (Read & write), **Build** (Read), **Project and Team** (Read),
+**Wiki** (Read & write), **Packaging** (Read). Without `ado_pat`, git and the
+MCP server fall back to `az login` and npm to `npm_pat`.
+
+Renewing the PAT (Azure DevOps caps its lifetime): create a new one in Azure
+DevOps, paste it into `ado_pat`, then `scripts/push-work-secrets.sh c3po`.
+
+The pushed file holds the same values the rendered work files (`work.env`,
+`.npmrc`) contain anyway.
 
 **WSL prerequisites:** 1Password for Windows with the
 [WSL integration](https://developer.1password.com/docs/ssh/integrations/wsl/)

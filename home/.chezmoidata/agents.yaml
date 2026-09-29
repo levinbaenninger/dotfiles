@@ -26,7 +26,14 @@ agents:
         command: sh
         args:
           - -c
-          - . "$HOME/.config/dotfiles/work.env" && exec npx -y @azure-devops/mcp "$ADO_ORG" --authentication azcli
+          # PAT when 1Password has ado_pat (pat mode wants base64 "user:token"),
+          # otherwise the Azure CLI login.
+          - >-
+            . "$HOME/.config/dotfiles/work.env" &&
+            if [ -n "${ADO_PAT:-}" ]; then
+            PERSONAL_ACCESS_TOKEN=$(printf 'pat:%s' "$ADO_PAT" | base64 | tr -d '\n')
+            exec npx -y @azure-devops/mcp "$ADO_ORG" --authentication pat;
+            else exec npx -y @azure-devops/mcp "$ADO_ORG" --authentication azcli; fi
       sonarqube:
         command: sh
         args:

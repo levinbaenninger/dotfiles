@@ -23,6 +23,6 @@
 {{- end }}
 
 {{- if not (and .work .headless) }}
-# Azure DevOps git auth via `az`: headless work VMs only.
-.local/bin/git-credential-azure-cli
+# Azure DevOps git credential helper: headless work VMs only.
+.local/bin/git-credential-azure-devops
 {{- end }}
