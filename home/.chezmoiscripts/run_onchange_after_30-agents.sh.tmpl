@@ -6,6 +6,9 @@
 #   hooks   -> herdr's Claude/Codex integrations
 # Re-runs whenever that data (or the work flag) changes.
 # data hash: {{ list .agents.skills .agents.claude .agents.mcp .work | toJson | sha256sum }}
+# MCP JSON keeps $HOME/$ADO_ORG literal on purpose; sh expands them when the
+# server starts.
+# shellcheck disable=SC2016
 set -euo pipefail
 export PATH="$HOME/.local/bin:{{ .brewPrefix }}/bin:/usr/local/bin:$PATH"
 # shellcheck disable=SC1091
@@ -41,9 +44,6 @@ if command -v claude >/dev/null; then
   echo "==> Claude Code MCP servers"
   # Only touch servers whose definition changed: re-adding one resets its
   # OAuth login.
-  # The JSON below keeps $HOME/$ADO_ORG literal on purpose; sh expands them
-  # when the MCP server starts.
-  # shellcheck disable=SC2016
   add_mcp() {
     local current
     current=$(jq -cS --arg n "$1" '.mcpServers[$n] // empty' "$HOME/.claude.json" 2>/dev/null || true)
