@@ -62,7 +62,7 @@ if command -v claude >/dev/null; then
 {{-   else }}
 {{-     $json = dict "type" "stdio" "command" $srv.command "args" ($srv.args | default list) }}
 {{-   end }}
-  add_mcp {{ $name | squote }} {{ toJson $json | squote }}
+  add_mcp {{ $name | squote }} '{{ toJson $json | replace "'" "'\\''" }}'
 {{- end }}
 else
   echo "claude not on PATH; skipping plugins and MCP servers" >&2
