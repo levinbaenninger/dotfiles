@@ -4,6 +4,9 @@
 {{- if eq .profile "mac" }}
 # Brewfile.mac hash: {{ include (joinPath .chezmoi.workingTree "Brewfile.mac") | sha256sum }}
 {{- end }}
+{{- if .work }}
+# Brewfile.work hash: {{ include (joinPath .chezmoi.workingTree "Brewfile.work") | sha256sum }}
+{{- end }}
 set -euo pipefail
 
 brew="{{ .brewPrefix }}/bin/brew"
@@ -14,7 +17,7 @@ fi
 export HOMEBREW_NO_ENV_HINTS=1
 
 # shellcheck disable=SC2043 # one file on Linux, two on macOS
-for file in Brewfile{{ if eq .profile "mac" }} Brewfile.mac{{ end }}; do
+for file in Brewfile{{ if eq .profile "mac" }} Brewfile.mac{{ end }}{{ if .work }} Brewfile.work{{ end }}; do
   path="{{ .chezmoi.workingTree }}/$file"
   "$brew" bundle check --no-upgrade --file="$path" >/dev/null 2>&1 && continue
   echo "==> brew bundle $file"

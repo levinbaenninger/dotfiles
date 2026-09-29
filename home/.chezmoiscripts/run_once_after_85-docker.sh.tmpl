@@ -1,0 +1,8 @@
+{{ if eq .profile "exe" -}}
+#!/usr/bin/env bash
+# exeuntu ships Docker installed but disabled; MCP servers and dev work need it.
+set -euo pipefail
+systemctl is-active --quiet docker && exit 0
+sudo systemctl enable --now docker
+echo "Docker enabled."
+{{ end -}}

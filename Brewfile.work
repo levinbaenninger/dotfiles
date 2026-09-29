@@ -1,0 +1,5 @@
+# Work machines only (work = true). Installed after the portable Brewfile.
+
+# Azure DevOps: git credentials (headless machines) and the ADO MCP server
+# authenticate through `az login`, so there's no PAT to rotate.
+brew "azure-cli"

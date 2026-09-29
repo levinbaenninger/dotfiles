@@ -18,8 +18,13 @@ Source: ~/dotfiles/home/.chezmoitemplates/agents.md. Edit there, then `chezmoi a
 {{ else if eq .profile "exe" -}}
 - An exe.dev VM (Ubuntu, user `exedev`, passwordless sudo). Packages come from Homebrew on Linux.
 - exe.dev HTTPS proxy: https://exe.dev/docs/proxy.md. Only use documented exe.dev features (https://exe.dev/docs.md); undocumented local endpoints are internal and unstable.
+{{- if not .work }}
 - GitHub: `gh` is logged in and is git's credential helper; use normal `github.com` URLs.
+{{- end }}
 - Dev servers: listen on `0.0.0.0` with a port between 3000 and 9999, then open `https://{{ .chezmoi.hostname }}.exe.xyz:<port>/` (private to the user; exe.dev handles TLS). Vite needs `server.allowedHosts: ['.exe.xyz']`, Next.js `allowedDevOrigins`.
+{{- if .work }}
+- Work machine. Azure DevOps (git over HTTPS and the ADO MCP server) authenticates through the Azure CLI; if it fails, ask the user to run `az login --use-device-code`. Don't create or store PATs.
+{{- end }}
 {{ else -}}
 - A Linux VM. Packages come from Homebrew on Linux (`~/dotfiles/Brewfile`).
 {{ end -}}

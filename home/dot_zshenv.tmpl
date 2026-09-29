@@ -16,6 +16,15 @@ fi
 {{- end }}
 
 
+{{- if and .work .headless }}
+
+# chezmoi reads the Work vault through a 1Password service account. Hand it
+# the token only when chezmoi itself runs, not to every process.
+chezmoi() {
+  OP_SERVICE_ACCOUNT_TOKEN="$(<"$HOME/.config/dotfiles/op-service-account-token")" command chezmoi "$@"
+}
+{{- end }}
+
 # Vite+ bin (https://viteplus.dev)
 [ -f "$HOME/.vite-plus/env" ] && . "$HOME/.vite-plus/env"
 {{- if eq .containerRuntime "podman" }}

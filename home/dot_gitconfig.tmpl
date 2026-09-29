@@ -58,6 +58,17 @@
 	helper =
 	helper = !{{ $gh }} auth git-credential
 
+{{- if and .work .headless }}
+
+# Azure DevOps over HTTPS with tokens from `az login` (no PAT).
+[credential "https://dev.azure.com"]
+	helper =
+	helper = !{{ .chezmoi.homeDir }}/.local/bin/git-credential-azure-cli
+[credential "https://*.visualstudio.com"]
+	helper =
+	helper = !{{ .chezmoi.homeDir }}/.local/bin/git-credential-azure-cli
+{{- end }}
+
 {{- if .work }}
 
 # Work identity (name/email from 1Password) for Azure DevOps remotes and for

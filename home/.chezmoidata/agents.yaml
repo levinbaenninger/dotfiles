@@ -26,7 +26,7 @@ agents:
         command: sh
         args:
           - -c
-          - . "$HOME/.config/dotfiles/work.env" && exec npx -y @azure-devops/mcp "$ADO_ORG"
+          - . "$HOME/.config/dotfiles/work.env" && exec npx -y @azure-devops/mcp "$ADO_ORG" --authentication azcli
       sonarqube:
         command: sh
         args:
