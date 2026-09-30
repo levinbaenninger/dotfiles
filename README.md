@@ -39,6 +39,22 @@ ssh <vm>.exe.xyz tail -f dotfiles-setup.log
 If first boot gets too slow, build [`exe.dev/Dockerfile`](exe.dev/Dockerfile)
 (exeuntu plus these dotfiles, no secrets) and use `ssh exe.dev new --image=…`.
 
+**Dev servers from the work laptop:** its network only lets 443 and SSH out, so
+`https://<vm>.exe.xyz:<port>/` doesn't load there. On the WSL work laptop
+`chezmoi apply` enables `dev-tunnel.service`, a systemd user service that
+forwards the ports in `fleet.ports` (`.chezmoidata/fleet.yaml`) from the first
+work VM to `localhost`. Start the dev server on one of those ports and open
+`http://localhost:<port>/` on the laptop (browser or T3 Code preview); no
+`0.0.0.0` binding or `allowedHosts` needed.
+
+- It uses WSL's `ssh` without your shell's environment, so the key registered
+  with exe.dev must work without an agent or passphrase prompt. Test with
+  `env -i HOME="$HOME" ssh -o BatchMode=yes <vm>.exe.xyz true`.
+- It runs while WSL is running, so keep a WSL terminal open. Check it with
+  `systemctl --user status dev-tunnel`.
+- A port already in use in WSL is skipped; stop the local server and
+  `systemctl --user restart dev-tunnel` to get it back.
+
 Keep work secrets off exe.dev VMs. For tokens a VM needs, use exe.dev
 [integrations](https://exe.dev/docs/integrations.md) (GitHub, HTTP proxy with
 an injected header), so the credential stays on exe.dev's side.

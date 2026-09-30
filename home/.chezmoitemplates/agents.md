@@ -21,7 +21,12 @@ Source: ~/dotfiles/home/.chezmoitemplates/agents.md. Edit there, then `chezmoi a
 {{- if not .work }}
 - GitHub: `gh` is logged in and is git's credential helper; use normal `github.com` URLs.
 {{- end }}
-- Dev servers: listen on `0.0.0.0` with a port between 3000 and 9999, then open `https://{{ .chezmoi.hostname }}.exe.xyz:<port>/` (private to the user; exe.dev handles TLS). Vite needs `server.allowedHosts: ['.exe.xyz']`, Next.js `allowedDevOrigins`.
+{{- if .work }}
+- Dev servers: use one of the ports {{ join ", " .fleet.ports }}. The user's work laptop forwards these to its own localhost over SSH, so give the user `http://localhost:<port>/` and pass it as `url` in the T3 Code preview (the preview runs on the laptop; the `environment-port` target fails here). `https://{{ .chezmoi.hostname }}.exe.xyz:<port>/` doesn't load there: its network blocks every port but 443 and SSH.
+{{- else }}
+- Dev servers: listen on `0.0.0.0` with a port between 3000 and 9999, then give the user `https://{{ .chezmoi.hostname }}.exe.xyz:<port>/` (private to the user; exe.dev handles TLS). Vite needs `server.allowedHosts: ['.exe.xyz']`, Next.js `allowedDevOrigins`.
+{{- end }}
+- To check a dev server from this VM (curl, Playwright, Chrome DevTools), use `http://localhost:<port>/`. The `.exe.xyz` name resolves to the VM itself here and skips the proxy.
 {{- if .work }}
 - Work machine. Azure DevOps (git over HTTPS and the ADO MCP server) authenticates with the PAT from 1Password (`ADO_PAT` in `~/.config/dotfiles/work.env`). Never print, log or commit it. If access fails, the PAT is likely expired: ask the user to renew it (see the dotfiles README).
 {{- end }}

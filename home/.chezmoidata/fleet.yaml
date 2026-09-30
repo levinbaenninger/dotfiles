@@ -10,6 +10,10 @@ fleet:
   # Azure DevOps PAT (scripts/renew-ado-pat.sh on the work laptop).
   work:
     - c3po
+  # Dev-server ports the work laptop forwards from the first work VM to its
+  # own localhost (dev-tunnel.service). Its network only lets 443 and SSH out,
+  # so https://<vm>.exe.xyz:<port>/ doesn't load there.
+  ports: [3000, 3001, 4173, 4200, 5173, 5174, 6006, 8000, 8080]
   # Other machines: hostname -> name shown in prompts.
   hosts:
     Millennium-Falcon: falcon
