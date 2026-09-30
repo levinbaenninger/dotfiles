@@ -26,7 +26,7 @@ Override with `DOTFILES_PROFILE=…`, `DOTFILES_WORK=1|0` and
 
 ### R2-D2 on Hetzner
 
-The server currently resolves as `devbox-01` on Tailscale and logs in as
+The server resolves as `r2-d2` on Tailscale and logs in as
 `levin`. The macOS SSH config adds `r2d2` as an alias for that target. The shell
 prompt and Claude status line display `R2-D2` for either hostname. Set the
 server's pretty hostname to `R2-D2` for the same name in T3 Connect without
@@ -58,7 +58,7 @@ The install needs the server user's sudo password for Ubuntu prerequisites,
 Homebrew and the login shell. On later runs, `chezmoi update` pulls and applies
 dotfile changes. Re-run `scripts/push-work-secrets.sh r2d2` after editing the
 1Password item. The work laptop's PAT renewal timer targets
-`levin@devbox-01` over Tailscale.
+`levin@r2-d2` over Tailscale.
 
 Install T3 Code on the server and link it to T3 Connect. Open the sign-in URL
 printed by `t3 connect` on another device, confirm the code, and accept the
@@ -84,7 +84,7 @@ laptop's localhost over SSH. Listen on `127.0.0.1` on the server and open
 `http://localhost:<port>/` on the laptop, including in T3 Code preview.
 
 - WSL's `ssh` needs a key accepted by the Hetzner server without a prompt.
-  Check with `env -i HOME="$HOME" ssh -o BatchMode=yes levin@devbox-01 true`
+  Check with `env -i HOME="$HOME" ssh -o BatchMode=yes levin@r2-d2 true`
   in WSL. Add that user's public key to the server's `~/.ssh/authorized_keys`
   if needed.
 - Keep WSL running for the tunnel. Check it with
@@ -193,7 +193,7 @@ The PAT must be named `dotfiles` in Azure DevOps (or set `ADO_PAT_NAME`).
 
 Setup on the laptop (once): WSL with systemd (`/etc/wsl.conf`: `[boot]`
 `systemd=true`), `az login`, and a working
-`ssh -o BatchMode=yes levin@devbox-01 true` from WSL. `chezmoi apply` then
+`ssh -o BatchMode=yes levin@r2-d2 true` from WSL. `chezmoi apply` then
 enables the timer.
 
 The pushed file holds the same values the rendered work files (`work.env`,

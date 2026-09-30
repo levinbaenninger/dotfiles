@@ -3,11 +3,12 @@ fleet:
   # Headless work hosts that receive a renewed Azure DevOps PAT from the WSL
   # work laptop. These SSH targets must resolve there over Tailscale.
   work:
-    - levin@devbox-01
+    - levin@r2-d2
   # Dev-server ports forwarded from the first work host to the work laptop.
   ports: [3000, 3001, 4173, 4200, 4300, 4301, 4400, 5173, 5174, 6006, 8000, 8080]
   # Hostname -> name shown in prompts.
   hosts:
     Millennium-Falcon: falcon
     devbox-01: R2-D2
+    r2-d2: R2-D2
     r2d2: R2-D2
