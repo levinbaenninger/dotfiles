@@ -159,8 +159,10 @@ starts. By hand: `scripts/renew-ado-pat.sh --check` (report only) or `--force`.
 The PAT must be named `dotfiles` in Azure DevOps (or set `ADO_PAT_NAME`).
 
 Setup on the laptop (once): WSL with systemd (`/etc/wsl.conf`: `[boot]`
-`systemd=true`), `az login`, and one `ssh.exe levin-c3po.exe.xyz` to accept
-the VM's host key. `chezmoi apply` then enables the timer.
+`systemd=true`), `az login`, and one `ssh levin-c3po.exe.xyz` to accept
+the VM's host key. `chezmoi apply` then enables the timer. The push uses WSL's
+own `ssh`, so its key must be registered with exe.dev and work without a
+passphrase prompt.
 
 The pushed file holds the same values the rendered work files (`work.env`,
 `.npmrc`) contain anyway.

@@ -8,9 +8,10 @@
 # The values are never printed; they travel over SSH into a 0600 file.
 set -euo pipefail
 host="${1:?usage: $0 <ssh-host>}"
-# On WSL, 1Password's CLI and SSH agent live on the Windows side.
+# On WSL, 1Password's CLI lives on the Windows side. SSH stays WSL's own
+# `ssh`: that's where the key registered with exe.dev is, not in ssh.exe's agent.
 OP="${OP:-$(command -v op || command -v op.exe)}"
-SSH="${SSH:-$(if grep -qi microsoft /proc/sys/kernel/osrelease 2>/dev/null && command -v ssh.exe >/dev/null; then echo ssh.exe; else echo ssh; fi)}"
+SSH="${SSH:-ssh}"
 
 json=$("$OP" item get dotfiles --vault Work --format json \
   | jq '[.fields[] | select(.label and .value and .label != "password" and .label != "notesPlain")

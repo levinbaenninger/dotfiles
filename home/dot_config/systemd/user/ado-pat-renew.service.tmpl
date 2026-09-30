@@ -8,7 +8,6 @@ Type=oneshot
 ExecStart={{ .chezmoi.homeDir }}/dotfiles/scripts/renew-ado-pat.sh
 Environment=DOTFILES_DIR={{ .chezmoi.homeDir }}/dotfiles
 Environment=ADO_PAT_PUSH_HOSTS={{ range $i, $short := .fleet.work }}{{ if $i }} {{ end }}{{ get $.fleet.exe $short }}.exe.xyz{{ end }}
-# Windows-side 1Password CLI and OpenSSH (for the 1Password SSH agent); user
-# services don't get the Windows PATH, so use absolute paths.
+# Windows-side 1Password CLI; user services don't get the Windows PATH, so use
+# an absolute path. The push to the VMs uses WSL's own ssh.
 Environment=OP={{ lookPath "op.exe" | default "op.exe" }}
-Environment=SSH={{ lookPath "ssh.exe" | default "ssh.exe" }}
