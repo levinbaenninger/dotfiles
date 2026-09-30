@@ -1,6 +1,6 @@
 # Work identity, rendered only on work machines. Values come from 1Password
 # (op://Work/dotfiles). Included by ~/.gitconfig for Azure DevOps remotes and
-# for every repo under ~/work/.
+# for every repo under ~/work/ or ~/source/work/.
 [user]
 	name = {{ includeTemplate "work-secret" (list . "git_name") }}
 	email = {{ includeTemplate "work-secret" (list . "git_email") }}

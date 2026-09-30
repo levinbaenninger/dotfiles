@@ -40,10 +40,16 @@ ssh -t r2d2 'sudo hostnamectl set-hostname --pretty "R2-D2"'
 
 This is one machine for personal and work projects. Run chezmoi with
 `DOTFILES_WORK=1`. Personal Git identity stays the default; repositories under
-`~/work/` and Azure DevOps remotes use the work identity. Work mode is a
-machine-wide setting, so the work agent integrations and work secrets are also
-available from personal project sessions. Use a separate machine or account
-if those need strict isolation.
+`~/work/`, `~/source/work/` and Azure DevOps remotes use the work identity.
+Work mode is a machine-wide setting, so the work agent integrations and work
+secrets are also available from personal project sessions. Use a separate
+machine or account if those need strict isolation.
+
+Personal commits and tags on R2-D2 use the local SSH signing key at
+`~/.ssh/id_ed25519_signing_r2d2`. The key is only for signing, and its private
+half stays on the server outside this repo. The Mac and WSL still use the
+1Password signer. Work repos disable signing, including on R2-D2. If the server
+is rebuilt, create a new signing key and register its public half with GitHub.
 
 Before the first install, copy the `Work/dotfiles` 1Password item from the Mac
 to `~/.config/dotfiles/work-secrets.json` on the server. This sends the item,
@@ -143,9 +149,10 @@ the templates:
   `~/.config/git/work.gitconfig`. Nothing is rendered on personal machines.
 - Work MCP servers source `work.env` when they start, so tokens never end up
   in `~/.claude.json`, `config.toml` or their backup copies.
-- Git identities: personal by default. The work name/email (unsigned) applies to
-  Azure DevOps remotes and to every repo under `~/work/` (`includeIf` in
-  `~/.gitconfig`). Check with `git config user.email` inside a repo.
+- Git identities: personal by default. The work name/email (unsigned) applies
+  to Azure DevOps remotes and to every repo under `~/work/` or
+  `~/source/work/` (`includeIf` in `~/.gitconfig`). Check with
+  `git config user.email` inside a repo.
 
 ### Azure Artifacts (npm)
 
