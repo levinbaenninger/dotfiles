@@ -1,8 +1,8 @@
 # Dotfiles
 
-One setup for every machine I work on: macOS, WSL at work, Linux VMs and
-[exe.dev](https://exe.dev) VMs. Managed with [chezmoi](https://chezmoi.io),
-packages from Homebrew (on Linux too), secrets from 1Password.
+One setup for macOS, WSL at work and Linux servers. Managed with
+[chezmoi](https://chezmoi.io), packages from Homebrew (on Linux too), and work
+secrets from 1Password.
 
 ## Install
 
@@ -17,47 +17,80 @@ bash -c "$(curl -fsSL https://raw.githubusercontent.com/levinbaenninger/dotfiles
 | --- | --- | --- |
 | `mac` | macOS | `Brewfile.mac` (apps, fonts), SSH via 1Password agent, commit signing |
 | `wsl` | `microsoft` in the kernel release | `ssh.exe` + 1Password's WSL signer, work mode on by default |
-| `exe` | `/exe.dev` exists | no signing, GitHub through the exe.dev integration |
-| `linux` | anything else | no signing |
+| `linux` | anything else | headless, no signing |
 
 Override with `DOTFILES_PROFILE=…`, `DOTFILES_WORK=1|0` and
-`DOTFILES_CONTAINER_RUNTIME=docker|podman` (work machines default to podman). You're asked
+`DOTFILES_CONTAINER_RUNTIME=docker|podman` (WSL defaults to podman). You're asked
 "work machine?" once on interactive installs; the answer is stored in
 `~/.config/chezmoi/chezmoi.toml`.
 
-### exe.dev
+### R2-D2 on Hetzner
 
-New VMs run [`exe.dev/setup.sh`](exe.dev/setup.sh) on first boot. It calls `install.sh`:
+The server currently resolves as `devbox-01` on Tailscale and logs in as
+`levin`. The macOS SSH config adds `r2d2` as an alias for that target. The shell
+prompt and Claude status line display `R2-D2` for either hostname. Set the
+server's pretty hostname to `R2-D2` for the same name in T3 Connect without
+changing its Tailscale address:
 
 ```bash
-# default for every new VM
-ssh exe.dev defaults write dev.exe new.setup-script < ~/dotfiles/exe.dev/setup.sh
-# watch it
-ssh <vm>.exe.xyz tail -f dotfiles-setup.log
+chezmoi apply ~/.ssh/config
+ssh r2d2 hostname
+ssh -t r2d2 'sudo hostnamectl set-hostname --pretty "R2-D2"'
 ```
 
-If first boot gets too slow, build [`exe.dev/Dockerfile`](exe.dev/Dockerfile)
-(exeuntu plus these dotfiles, no secrets) and use `ssh exe.dev new --image=…`.
+This is one machine for personal and work projects. Run chezmoi with
+`DOTFILES_WORK=1`. Personal Git identity stays the default; repositories under
+`~/work/` and Azure DevOps remotes use the work identity. Work mode is a
+machine-wide setting, so the work agent integrations and work secrets are also
+available from personal project sessions. Use a separate machine or account
+if those need strict isolation.
 
-**Dev servers from the work laptop:** its network only lets 443 and SSH out, so
-`https://<vm>.exe.xyz:<port>/` doesn't load there. On the WSL work laptop
-`chezmoi apply` enables `dev-tunnel.service`, a systemd user service that
-forwards the ports in `fleet.ports` (`.chezmoidata/fleet.yaml`) from the first
-work VM to `localhost`. Start the dev server on one of those ports and open
-`http://localhost:<port>/` on the laptop (browser or T3 Code preview); no
-`0.0.0.0` binding or `allowedHosts` needed.
+Before the first install, copy the `Work/dotfiles` 1Password item from the Mac
+to `~/.config/dotfiles/work-secrets.json` on the server. This sends the item,
+including PATs, to the server over Tailscale SSH and stores it with mode 0600:
 
-- It uses WSL's `ssh` without your shell's environment, so the key registered
-  with exe.dev must work without an agent or passphrase prompt. Test with
-  `env -i HOME="$HOME" ssh -o BatchMode=yes <vm>.exe.xyz true`.
-- It runs while WSL is running, so keep a WSL terminal open. Check it with
+```bash
+scripts/push-work-secrets.sh r2d2
+ssh -t r2d2 'DOTFILES_WORK=1 bash -c "$(curl -fsSL https://raw.githubusercontent.com/levinbaenninger/dotfiles/main/install.sh)"'
+```
+
+The install needs the server user's sudo password for Ubuntu prerequisites,
+Homebrew and the login shell. On later runs, `chezmoi update` pulls and applies
+dotfile changes. Re-run `scripts/push-work-secrets.sh r2d2` after editing the
+1Password item. The work laptop's PAT renewal timer targets
+`levin@devbox-01` over Tailscale.
+
+Install T3 Code on the server and link it to T3 Connect. Open the sign-in URL
+printed by `t3 connect` on another device, confirm the code, and accept the
+background service when prompted:
+
+```bash
+ssh r2d2 'curl -fsSL https://t3.codes/install.sh | sh'
+ssh -t r2d2 '~/.local/bin/t3 connect --headless'
+ssh r2d2 '~/.local/bin/t3 connect status && ~/.local/bin/t3 service status'
+```
+
+The service needs systemd lingering to stay up after logout. If T3 reports
+`linger-disabled`, run `ssh -t r2d2 'sudo loginctl enable-linger levin'` and
+then `ssh r2d2 '~/.local/bin/t3 service install'`. Sign in to the same T3
+Connect account in the client and select this environment. See the
+[T3 remote access](https://github.com/pingdotgg/t3code/blob/main/docs/user/remote-access.md)
+and [background service](https://github.com/pingdotgg/t3code/blob/main/docs/user/background-service.md)
+guides.
+
+**Dev servers from the work laptop:** `chezmoi apply` on WSL enables
+`dev-tunnel.service`. It forwards the ports in `fleet.ports` from R2-D2 to the
+laptop's localhost over SSH. Listen on `127.0.0.1` on the server and open
+`http://localhost:<port>/` on the laptop, including in T3 Code preview.
+
+- WSL's `ssh` needs a key accepted by the Hetzner server without a prompt.
+  Check with `env -i HOME="$HOME" ssh -o BatchMode=yes levin@devbox-01 true`
+  in WSL. Add that user's public key to the server's `~/.ssh/authorized_keys`
+  if needed.
+- Keep WSL running for the tunnel. Check it with
   `systemctl --user status dev-tunnel`.
-- A port already in use in WSL is skipped; stop the local server and
+- A port already in use in WSL is skipped. Stop the local server and run
   `systemctl --user restart dev-tunnel` to get it back.
-
-Keep work secrets off exe.dev VMs. For tokens a VM needs, use exe.dev
-[integrations](https://exe.dev/docs/integrations.md) (GitHub, HTTP proxy with
-an injected header), so the credential stays on exe.dev's side.
 
 ## Day to day
 
@@ -128,14 +161,14 @@ To add a work secret: add a field to the 1Password item, reference it in
 `home/dot_config/dotfiles/private_work.env.tmpl` with
 `onepasswordRead "op://Work/dotfiles/<field>"`, and use `$VAR` wherever you need it.
 
-**Headless work VMs (exe.dev, Linux):** there's no 1Password app, so the Mac
-pushes a copy of the `Work/dotfiles` item to the VM
+**Headless Linux work hosts:** there's no 1Password app, so the Mac pushes a
+copy of the `Work/dotfiles` item to the host
 (`~/.config/dotfiles/work-secrets.json`, mode 0600) and chezmoi reads it from
 there:
 
 ```bash
-scripts/push-work-secrets.sh c3po          # on the Mac; re-run after changing a value
-ssh c3po 'DOTFILES_WORK=1 ~/dotfiles/install.sh'   # first time only
+scripts/push-work-secrets.sh r2d2          # on the Mac; re-run after changing a value
+ssh r2d2 'DOTFILES_WORK=1 ~/dotfiles/install.sh'   # after cloning, if needed
 ```
 
 Azure DevOps git access, the ADO MCP server and the npm feeds use one PAT,
@@ -151,7 +184,7 @@ MCP server fall back to `az login` and npm to `npm_pat`.
 - more than 30 days left: nothing happens;
 - otherwise it extends the PAT by a year (same value, nothing to redistribute);
 - if the org doesn't allow extending, it creates a new PAT with the same
-  scopes, stores it in `ado_pat`, pushes it to the work VMs (`work:` in
+  scopes, stores it in `ado_pat`, pushes it to the work hosts (`work:` in
   `.chezmoidata/fleet.yaml`) and revokes the old one.
 
 Problems (e.g. an expired `az login`) show up as a warning when a new shell
@@ -159,10 +192,9 @@ starts. By hand: `scripts/renew-ado-pat.sh --check` (report only) or `--force`.
 The PAT must be named `dotfiles` in Azure DevOps (or set `ADO_PAT_NAME`).
 
 Setup on the laptop (once): WSL with systemd (`/etc/wsl.conf`: `[boot]`
-`systemd=true`), `az login`, and one `ssh levin-c3po.exe.xyz` to accept
-the VM's host key. `chezmoi apply` then enables the timer. The push uses WSL's
-own `ssh`, so its key must be registered with exe.dev and work without a
-passphrase prompt.
+`systemd=true`), `az login`, and a working
+`ssh -o BatchMode=yes levin@devbox-01 true` from WSL. `chezmoi apply` then
+enables the timer.
 
 The pushed file holds the same values the rendered work files (`work.env`,
 `.npmrc`) contain anyway.
@@ -189,7 +221,6 @@ machines without work.env). Then it runs `ggshield` if you're logged in.
 install.sh               bootstrap (all platforms)
 Brewfile                 portable CLI tools
 Brewfile.mac             macOS formulae, apps, fonts
-exe.dev/                 setup script + optional image
 .githooks/pre-commit     leak guard
 home/                    chezmoi source (see .chezmoiroot)
   .chezmoi.toml.tmpl     profile detection

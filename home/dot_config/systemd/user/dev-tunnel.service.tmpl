@@ -1,14 +1,13 @@
-{{- $vm := get .fleet.exe (index .fleet.work 0) -}}
+{{- $host := index .fleet.work 0 -}}
 # Managed by chezmoi (WSL work laptop only). The work network only lets 443
-# and SSH out, so https://{{ $vm }}.exe.xyz:<port>/ doesn't load here. This
-# forwards the dev-server ports (fleet.ports in .chezmoidata/fleet.yaml) from
-# the work VM to localhost; Windows apps reach them through WSL's localhost
-# forwarding.
+# and SSH out. This forwards the dev-server ports (fleet.ports in
+# .chezmoidata/fleet.yaml) from the server to localhost. Windows apps reach
+# them through WSL's localhost forwarding.
 [Unit]
-Description=Forward dev-server ports from {{ $vm }} to localhost
+Description=Forward dev-server ports from {{ $host }} to localhost
 
 [Service]
-# WSL's ssh, not ssh.exe: the key registered with exe.dev lives in WSL.
+# WSL's ssh uses its own key to authenticate to the Hetzner server.
 # A port already taken locally is skipped instead of failing the tunnel.
 ExecStart={{ lookPath "ssh" | default "/usr/bin/ssh" }} -N \
   -o BatchMode=yes -o ExitOnForwardFailure=no \
@@ -16,7 +15,7 @@ ExecStart={{ lookPath "ssh" | default "/usr/bin/ssh" }} -N \
 {{- range .fleet.ports }}
   -L {{ . }}:localhost:{{ . }} \
 {{- end }}
-  {{ $vm }}.exe.xyz
+  {{ $host }}
 Restart=always
 RestartSec=15
 

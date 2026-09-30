@@ -2,16 +2,14 @@
 
 {{- /* Machine names come from .chezmoidata/fleet.yaml. */}}
 {{- $hostAliases := dict }}
-{{- range $short, $vm := .fleet.exe }}{{ $_ := set $hostAliases $vm $short }}{{ end }}
 {{- range $host, $short := .fleet.hosts }}{{ $_ := set $hostAliases $host $short }}{{ end }}
 
 # Always show which machine this is: user@host (aliased from
-# .chezmoidata/fleet.yaml), e.g. "levin@r2d2 ~/source/echo".
+# .chezmoidata/fleet.yaml), e.g. "levin@R2-D2 ~/source/echo".
 format = "$username$hostname$all"
 
 [username]
 format = "[$user]($style)@"
-aliases = { {{- range $i, $k := keys .fleet.users | sortAlpha }}{{ if $i }},{{ end }} {{ $k | quote }} = {{ get $.fleet.users $k | quote }}{{ end }} }
 
 [aws]
 symbol = " "

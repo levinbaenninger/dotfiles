@@ -2,11 +2,11 @@
   Evaluated by `chezmoi init`. Detects which kind of machine this is and
   records it in ~/.config/chezmoi/chezmoi.toml so templates can branch on it.
 
-  profile: mac | wsl | exe | linux
+  profile: mac | wsl | linux
   work:    pull work config + secrets from 1Password (vault "Work")
   containerRuntime: docker | podman (podman gets a `docker` shim + agent note)
 
-  Non-interactive overrides (used by install.sh and the exe.dev setup script):
+  Non-interactive overrides (used by install.sh):
     DOTFILES_PROFILE=linux DOTFILES_WORK=0 DOTFILES_CONTAINER_RUNTIME=docker \
       chezmoi init --apply --source ~/dotfiles
 */ -}}
@@ -16,8 +16,6 @@
 {{-   $profile = "mac" -}}
 {{- else if and (eq .chezmoi.os "linux") (.chezmoi.kernel.osrelease | lower | contains "microsoft") -}}
 {{-   $profile = "wsl" -}}
-{{- else if stat "/exe.dev" -}}
-{{-   $profile = "exe" -}}
 {{- end -}}
 {{- if env "DOTFILES_PROFILE" -}}
 {{-   $profile = env "DOTFILES_PROFILE" -}}
@@ -55,10 +53,10 @@ sourceDir = {{ .chezmoi.workingTree | quote }}
     brewPrefix = {{ $brewPrefix | quote }}
     work = {{ $work }}
     containerRuntime = {{ $containerRuntime | quote }}
-    headless = {{ or (eq $profile "exe") (eq $profile "linux") }}
-    # Where work secrets come from: the 1Password app, or (headless VMs) a
+    headless = {{ eq $profile "linux" }}
+    # Where work secrets come from: the 1Password app, or (headless Linux) a
     # copy pushed from the Mac by scripts/push-work-secrets.sh.
-    workSecrets = {{ ternary "file" "1password" (and $work (or (eq $profile "exe") (eq $profile "linux"))) | quote }}
+    workSecrets = {{ ternary "file" "1password" (and $work (eq $profile "linux")) | quote }}
 
 [onepassword]
     command = {{ $opCommand | quote }}

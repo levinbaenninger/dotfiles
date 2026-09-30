@@ -1,22 +1,13 @@
-# Machine and user names shown in the prompt (Starship), the Claude status
-# line and SSH aliases. Star Wars droids for the exe.dev fleet.
+# Machine names shown in the prompt (Starship) and Claude status line.
 fleet:
-  # exe.dev VMs: short name -> VM name. Gives `ssh <short>` and shows <short>
-  # instead of the VM name in prompts. exe.dev VM names need 5+ characters.
-  exe:
-    r2d2: levin-r2d2
-    c3po: levin-c3po
-  # exe.dev VMs (short names) running in work mode: they receive a renewed
-  # Azure DevOps PAT (scripts/renew-ado-pat.sh on the work laptop).
+  # Headless work hosts that receive a renewed Azure DevOps PAT from the WSL
+  # work laptop. These SSH targets must resolve there over Tailscale.
   work:
-    - c3po
-  # Dev-server ports the work laptop forwards from the first work VM to its
-  # own localhost (dev-tunnel.service). Its network only lets 443 and SSH out,
-  # so https://<vm>.exe.xyz:<port>/ doesn't load there.
+    - levin@devbox-01
+  # Dev-server ports forwarded from the first work host to the work laptop.
   ports: [3000, 3001, 4173, 4200, 4300, 4301, 4400, 5173, 5174, 6006, 8000, 8080]
-  # Other machines: hostname -> name shown in prompts.
+  # Hostname -> name shown in prompts.
   hosts:
     Millennium-Falcon: falcon
-  # Login users -> name shown in prompts (exe.dev always logs in as exedev).
-  users:
-    exedev: levin
+    devbox-01: R2-D2
+    r2d2: R2-D2

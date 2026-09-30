@@ -9,7 +9,7 @@ if [[ -x {{ .brewPrefix }}/bin/brew && -z "$HOMEBREW_PREFIX" ]]; then
 fi
 export PATH="$HOME/.local/bin:$PATH"
 
-# PAM doesn't set this on exe.dev/containers; systemctl --user needs it.
+# Some containers do not set this; systemctl --user needs it.
 if [[ -z "$XDG_RUNTIME_DIR" && -d "/run/user/$(id -u)" ]]; then
   export XDG_RUNTIME_DIR="/run/user/$(id -u)"
 fi

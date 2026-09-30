@@ -15,23 +15,12 @@ Source: ~/dotfiles/home/.chezmoitemplates/agents.md. Edit there, then `chezmoi a
 {{ else if eq .profile "wsl" -}}
 - WSL on a work laptop. Packages come from Homebrew on Linux (`~/dotfiles/Brewfile`).
 - Windows tools are reachable with the `.exe` suffix (e.g. `op.exe`, `ssh.exe`).
-{{ else if eq .profile "exe" -}}
-- An exe.dev VM (Ubuntu, user `exedev`, passwordless sudo). Packages come from Homebrew on Linux.
-- exe.dev HTTPS proxy: https://exe.dev/docs/proxy.md. Only use documented exe.dev features (https://exe.dev/docs.md); undocumented local endpoints are internal and unstable.
-{{- if not .work }}
-- GitHub: `gh` is logged in and is git's credential helper; use normal `github.com` URLs.
-{{- end }}
-{{- if .work }}
-- Dev servers: use one of the ports {{ join ", " .fleet.ports }}. The user's work laptop forwards these to its own localhost over SSH, so give the user `http://localhost:<port>/` and pass it as `url` in the T3 Code preview (the preview runs on the laptop; the `environment-port` target fails here). `https://{{ .chezmoi.hostname }}.exe.xyz:<port>/` doesn't load there: its network blocks every port but 443 and SSH.
-{{- else }}
-- Dev servers: listen on `0.0.0.0` with a port between 3000 and 9999, then give the user `https://{{ .chezmoi.hostname }}.exe.xyz:<port>/` (private to the user; exe.dev handles TLS). Vite needs `server.allowedHosts: ['.exe.xyz']`, Next.js `allowedDevOrigins`.
-{{- end }}
-- To check a dev server from this VM (curl, Playwright, Chrome DevTools), use `http://localhost:<port>/`. The `.exe.xyz` name resolves to the VM itself here and skips the proxy.
-{{- if .work }}
-- Work machine. Azure DevOps (git over HTTPS and the ADO MCP server) authenticates with the PAT from 1Password (`ADO_PAT` in `~/.config/dotfiles/work.env`). Never print, log or commit it. If access fails, the PAT is likely expired: ask the user to renew it (see the dotfiles README).
-{{- end }}
 {{ else -}}
-- A Linux VM. Packages come from Homebrew on Linux (`~/dotfiles/Brewfile`).
+- Linux server. Packages come from Homebrew on Linux (`~/dotfiles/Brewfile`).
+{{- if .work }}
+- Dev servers: listen on localhost on one of the ports {{ join ", " .fleet.ports }}. The work laptop forwards these ports over SSH, so give the user `http://localhost:<port>/` for its browser or T3 Code preview. Check the server locally at the same URL.
+- Azure DevOps (git over HTTPS and the ADO MCP server) uses the PAT in `~/.config/dotfiles/work.env`. Never print, log or commit it. If access fails, check the PAT renewal steps in the dotfiles README.
+{{- end }}
 {{ end -}}
 - Node, npm, pnpm and bun are managed by Vite+ (`vp`). Don't install them another way.
 {{- if eq .containerRuntime "podman" }}

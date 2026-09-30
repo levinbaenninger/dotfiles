@@ -27,16 +27,8 @@ transcript=$(echo "$input" | jq -r '.transcript_path // empty')
 
 user=$(whoami)
 host=$(hostname -s)
-# Friendly names from ~/dotfiles/home/.chezmoidata/fleet.yaml
-case "$user" in
-{{- range $login, $shown := .fleet.users }}
-  {{ $login }}) user={{ $shown | squote }} ;;
-{{- end }}
-esac
+# Friendly host names from ~/dotfiles/home/.chezmoidata/fleet.yaml
 case "$host" in
-{{- range $short, $vm := .fleet.exe }}
-  {{ $vm }}) host={{ $short | squote }} ;;
-{{- end }}
 {{- range $hostname, $shown := .fleet.hosts }}
   {{ $hostname }}) host={{ $shown | squote }} ;;
 {{- end }}

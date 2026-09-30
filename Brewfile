@@ -1,5 +1,5 @@
-# Portable CLI toolset: installed on every machine (macOS, WSL, Linux VMs,
-# exe.dev) by Homebrew. macOS-only formulae and apps live in Brewfile.mac.
+# Portable CLI toolset: installed on every machine (macOS, WSL, Linux VMs)
+# by Homebrew. macOS-only formulae and apps live in Brewfile.mac.
 # Node, npm, pnpm and bun come from Vite+ (installed by chezmoi), not Homebrew.
 
 # Shell & Terminal
@@ -47,7 +47,6 @@ brew "herdr"
 
 # Development Utilities
 brew "ast-grep"
-brew "cloudflared"
 brew "httpie"
 brew "hyperfine"
 brew "jq"

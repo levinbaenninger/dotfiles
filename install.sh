@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
-# Bootstrap a new machine (macOS, WSL, Linux VM, exe.dev):
+# Bootstrap a new machine (macOS, WSL, Linux VM):
 #
 #   bash -c "$(curl -fsSL https://raw.githubusercontent.com/levinbaenninger/dotfiles/main/install.sh)"
 #
 # Or from a clone:  ~/dotfiles/install.sh
 #
 # Non-interactive knobs (all optional):
-#   DOTFILES_PROFILE=mac|wsl|exe|linux   override auto-detection
+#   DOTFILES_PROFILE=mac|wsl|linux       override auto-detection
 #   DOTFILES_WORK=1|0                    pull work config from 1Password
 #                                        (headless Linux: push it first with
 #                                        scripts/push-work-secrets.sh from the Mac)

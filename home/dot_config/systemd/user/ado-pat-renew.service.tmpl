@@ -7,7 +7,7 @@ Description=Renew the Azure DevOps PAT (1Password Work/dotfiles ado_pat) when it
 Type=oneshot
 ExecStart={{ .chezmoi.homeDir }}/dotfiles/scripts/renew-ado-pat.sh
 Environment=DOTFILES_DIR={{ .chezmoi.homeDir }}/dotfiles
-Environment=ADO_PAT_PUSH_HOSTS={{ range $i, $short := .fleet.work }}{{ if $i }} {{ end }}{{ get $.fleet.exe $short }}.exe.xyz{{ end }}
+Environment=ADO_PAT_PUSH_HOSTS={{ join " " .fleet.work }}
 # Windows-side 1Password CLI; user services don't get the Windows PATH, so use
-# an absolute path. The push to the VMs uses WSL's own ssh.
+# an absolute path. The push to the server uses WSL's own ssh.
 Environment=OP={{ lookPath "op.exe" | default "op.exe" }}
