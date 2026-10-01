@@ -25,3 +25,6 @@ if [[ -z "$DOCKER_HOST" && -S "${XDG_RUNTIME_DIR:-/run/user/$(id -u)}/podman/pod
   export DOCKER_HOST="unix://${XDG_RUNTIME_DIR:-/run/user/$(id -u)}/podman/podman.sock"
 fi
 {{- end }}
+
+# Machine-local environment, including corporate CA and additional tools.
+[[ -r "$HOME/.zshenv.local" ]] && source "$HOME/.zshenv.local"

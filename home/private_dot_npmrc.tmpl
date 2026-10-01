@@ -21,3 +21,10 @@
 //pkgs.dev.azure.com/{{ $path }}/{{ $suffix }}:email=npm requires email to be set but doesn't use the value
 {{-   end }}
 {{- end }}
+
+{{- $local := joinPath .chezmoi.homeDir ".npmrc.local" }}
+{{- if stat $local }}
+
+; Machine-local registry settings.
+{{ include $local | trim }}
+{{- end }}

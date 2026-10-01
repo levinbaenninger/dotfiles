@@ -33,6 +33,10 @@
 	autoStash = true
 	updateRefs = true
 
+# Credentials and other settings specific to this machine.
+[include]
+	path = ~/.gitconfig.local
+
 {{- /* Desktop machines use 1Password. R2-D2 signs with its local, signing-only
        key when it exists; other headless machines leave signing disabled. */}}
 {{- $signer := "" }}
