@@ -28,3 +28,10 @@ fi
 
 # Machine-local environment, including corporate CA and additional tools.
 [[ -r "$HOME/.zshenv.local" ]] && source "$HOME/.zshenv.local"
+{{- if eq .profile "wsl" }}
+
+# WSL inserts Windows' PATH ahead of Vite+'s fallback-bin, so stale Windows
+# shims (a legacy global `npx`, `nx`, `tsc`) would shadow Linux tools and break
+# `npx -y` MCP servers. Keep Windows last; `.exe` tools still resolve.
+path=(${path:#/mnt/[a-z]/*} ${(M)path:#/mnt/[a-z]/*})
+{{- end }}

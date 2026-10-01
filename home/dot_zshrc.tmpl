@@ -141,5 +141,9 @@ fi
 
 # Vite+ bin (https://viteplus.dev) — sourced last so its bin wins position 1 in PATH
 [ -f "$HOME/.vite-plus/env" ] && . "$HOME/.vite-plus/env"
+{{- if eq .profile "wsl" }}
+# Vite+ just re-appended fallback-bin behind Windows' PATH; see ~/.zshenv.
+path=(${path:#/mnt/[a-z]/*} ${(M)path:#/mnt/[a-z]/*})
+{{- end }}
 
 unset _agent_shell
