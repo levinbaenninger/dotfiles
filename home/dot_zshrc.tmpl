@@ -108,6 +108,15 @@ alias webstorm="webstorm ."
 alias rider="rider ."
 
 {{ end -}}
+{{ if eq .profile "wsl" -}}
+# -----------------
+# SSH through Windows, where the 1Password agent runs. Aliases only, so
+# scripts keep WSL's own ssh.
+# -----------------
+alias ssh="ssh.exe"
+alias ssh-add="ssh-add.exe"
+
+{{ end -}}
 # -----------------
 # Misc quality-of-life
 # -----------------
