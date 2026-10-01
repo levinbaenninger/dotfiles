@@ -55,10 +55,12 @@ agents:
         - grilling
         - handoff
         - implement
+        - implement-spec
         - improve-codebase-architecture
+        - pr
         - prototype
         - research
-        - resolving-merge-conflicts
+        - retro
         - setup-matt-pocock-skills
         - tdd
         - teach
@@ -69,23 +71,53 @@ agents:
         - wait-what
         - wayfinder
         - wizard
-        - writing-beats
         - writing-for-agents
+      claude: false # Claude gets these from the mattpocock-skills plugin
+    # Beta and misc skills are published through skills.sh, outside the plugin.
+    - source: mattpocock/skills
+      skills:
+        - claude-handoff
+        - git-guardrails-claude-code
+        - loop-me
+        - migrate-to-shoehorn
+        - scaffold-exercises
+        - setup-pre-commit
+        - setup-ts-deep-modules
+        - writing-beats
         - writing-fragments
         - writing-shape
-      claude: false # Claude gets these from the mattpocock-skills plugin
+      claude: true
     - source: shadcn/improve
       skills: [improve]
       claude: true
     - source: cursor/plugins
       skills: [unslop]
       claude: true
+    - source: vercel-labs/skills
+      skills: [find-skills]
+      claude: true
+    - source: humanlayer/skills
+      skills: [show-me]
+      claude: true
+    # Complement Matt's workflow; keep his tdd and teach, and the existing unslop.
+    - source: backnotprop/pstack
+      skills:
+        - how
+        - why
+        - technical-writing
+        - create-verification-skill
+        - maintain-verification-skill
+        - typescript-best-practices
+        - principle-type-system-discipline
+        - principle-boundary-discipline
+      claude: true
 
   claude:
     marketplaces:
       - anthropics/claude-plugins-official
+      - mattpocock/skills
     plugins:
-      - mattpocock-skills@claude-plugins-official
+      - mattpocock-skills@mattpocock
 
     # ~/.claude/settings.json is also written by Claude itself, so it is merged
     # rather than replaced. `defaults` only fill in missing keys (changes you
@@ -107,7 +139,7 @@ agents:
         inputNeededNotifEnabled: true
         agentPushNotifEnabled: true
         enabledPlugins:
-          mattpocock-skills@claude-plugins-official: true
+          mattpocock-skills@mattpocock: true
       managed:
         statusLine:
           type: command

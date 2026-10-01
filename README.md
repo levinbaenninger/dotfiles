@@ -119,8 +119,8 @@ Both agents are configured from one place:
 | --- | --- | --- |
 | Global instructions | `home/.chezmoitemplates/agents.md` | `~/.claude/CLAUDE.md`, `~/.codex/AGENTS.md` |
 | MCP servers | `agents.mcp` in `home/.chezmoidata/agents.yaml` | Claude user scope (`claude mcp add-json`), `~/.codex/config.toml` |
-| Skills | `agents.skills` | `~/.agents/skills` (Codex reads it), symlinked into `~/.claude/skills` |
-| Claude plugins | `agents.claude.plugins` | `claude plugin install` |
+| Skills | `agents.skills` | `~/.agents/skills` (Codex reads it); entries with `claude: true` also link into `~/.claude/skills` |
+| Claude plugins | `agents.claude.plugins` | `claude plugin install` and `claude plugin update` |
 | Settings | `agents.claude.settings`, `agents.codex.config` | merged into `settings.json` / `config.toml` |
 | herdr hooks | – | `herdr integration install claude|codex` |
 
@@ -134,6 +134,26 @@ Both apps rewrite their own config files (project trust, UI state, plugin
 caches), so settings are merged instead of overwritten. `defaults` only fill in
 missing keys, so a change you make in the app sticks on that machine. `managed`
 keys always win. To change a default everywhere, edit `agents.yaml`.
+
+Matt Pocock's released skills come from his own plugin marketplace in Claude
+and skills.sh in Codex. The official marketplace pins an older commit. Beta
+and misc skills use shared copies in both agents. The dotfiles also
+manage `improve`, `unslop`, `find-skills`, and `show-me` for both.
+
+Selected pstack skills add code explanations, decision-history research,
+technical writing, verification workflows, and TypeScript guidance. Their
+`how` and `why` roles inherit the current agent's model through
+`~/.agents/pstack-models.md`. See [the full pstack comparison](docs/pstack-skills.md)
+for every skill, its dependencies, and overlap with Matt's skills.
+
+Changing `agents.yaml` and running `chezmoi apply` refreshes the agent setup.
+To refresh upstream skills and plugins without changing the configuration:
+
+```bash
+chezmoi execute-template --file ~/dotfiles/home/.chezmoiscripts/run_onchange_after_30-agents.sh.tmpl | bash
+```
+
+Skills are available on the next turn; restart Claude Code to load plugin updates.
 
 ## Work config and secrets
 

@@ -13,13 +13,15 @@ set -euo pipefail
 export PATH="$HOME/.local/bin:{{ .brewPrefix }}/bin:/usr/local/bin:$PATH"
 # shellcheck disable=SC1091
 [[ -f "$HOME/.vite-plus/env" ]] && . "$HOME/.vite-plus/env"
+# Keep Vite+'s npm tools ahead of Windows' PATH in this non-interactive shell.
+export PATH="$HOME/.vite-plus/bin:$HOME/.vite-plus/fallback-bin:$PATH"
 export DO_NOT_TRACK=1 DISABLE_TELEMETRY=1
 
 # --- Skills ------------------------------------------------------------------
 echo "==> Agent skills"
 mkdir -p "$HOME/.claude/skills"
 {{- range .agents.skills }}
-npx -y skills add {{ .source | squote }} --global --agent codex --yes
+npx -y skills@latest add {{ .source | squote }} --global --agent codex --yes
 {{- range .skills }} --skill {{ . | squote }}{{ end }}
 {{- if .claude }}
 # shellcheck disable=SC2041
@@ -36,10 +38,13 @@ if command -v claude >/dev/null; then
 {{- range .agents.claude.marketplaces }}
   claude plugin marketplace add {{ . | squote }} >/dev/null 2>&1 || true
 {{- end }}
-  claude plugin marketplace update >/dev/null 2>&1 || true
+  claude plugin marketplace update
 {{- range .agents.claude.plugins }}
-  claude plugin install {{ . | squote }} || echo "plugin {{ . }} failed to install" >&2
+  claude plugin install --scope user {{ . | squote }}
+  claude plugin update --scope user {{ . | squote }}
 {{- end }}
+  # Retire the old marketplace copy after the upstream copy is installed.
+  claude plugin uninstall --scope user mattpocock-skills@claude-plugins-official >/dev/null 2>&1 || true
 
   echo "==> Claude Code MCP servers"
   # Only touch servers whose definition changed: re-adding one resets its
