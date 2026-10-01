@@ -30,13 +30,14 @@
 {{- $out = includeTemplate "merge-into" (dict "dst" $out "src" $managed "force" true "emit" true) | fromYaml -}}
 {{- /* MCP servers defined in agents.yaml replace any existing entry of the same
        name, so stale keys (e.g. inline env secrets) don't survive the merge.
-       Only the app-owned `enabled` and `type` keys carry over. */ -}}
+       Only the app-owned `enabled` key carries over. Codex infers the transport
+       from `command` or `url`; `type` is not a supported config key. */ -}}
 {{- $servers := get $out "mcp_servers" -}}
 {{- range $name, $srv := $mcp -}}
 {{-   $new := deepCopy $srv -}}
 {{-   $old := get $servers $name -}}
 {{-   if kindIs "map" $old -}}
-{{-     range $key := list "enabled" "type" -}}
+{{-     range $key := list "enabled" -}}
 {{-       if hasKey $old $key -}}
 {{-         $_ := set $new $key (get $old $key) -}}
 {{-       end -}}

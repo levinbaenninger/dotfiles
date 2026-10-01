@@ -38,7 +38,7 @@ agents:
         command: sh
         args:
           - -c
-          - . "$HOME/.config/dotfiles/work.env" && exec "${CONTAINER_RUNTIME:-docker}" run --init --pull=always -i --rm -e SONARQUBE_TOKEN -e SONARQUBE_URL sonarsource/sonarqube-mcp
+          - . "$HOME/.config/dotfiles/work.env" && exec "${CONTAINER_RUNTIME:-docker}" run --init --pull=always -i --rm -e SONARQUBE_TOKEN -e SONARQUBE_URL -e SONARQUBE_MCP_IN_CONTAINER=true docker.io/sonarsource/sonarqube-mcp
 
   # Installed into ~/.agents/skills with the `skills` CLI. Codex reads that
   # directory directly; `claude: true` also links them into ~/.claude/skills.
