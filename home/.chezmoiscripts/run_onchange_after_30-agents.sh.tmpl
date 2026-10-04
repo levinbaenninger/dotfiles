@@ -1,11 +1,10 @@
 #!/usr/bin/env bash
 # Syncs the shared agent setup from .chezmoidata/agents.yaml:
 #   skills  -> ~/.agents/skills (Codex reads it directly), linked into ~/.claude/skills
-#   plugins -> Claude Code plugins
 #   MCP     -> Claude Code user scope (Codex gets them via ~/.codex/config.toml)
 #   hooks   -> herdr's Claude/Codex integrations
 # Re-runs whenever that data (or the work flag) changes.
-# data hash: {{ list .agents.skills .agents.claude .agents.mcp .work | toJson | sha256sum }}
+# data hash: {{ list .agents.skills .agents.claude .agents.codex .agents.mcp .work | toJson | sha256sum }}
 # MCP JSON keeps $HOME/$ADO_ORG literal on purpose; sh expands them when the
 # server starts.
 # shellcheck disable=SC2016
@@ -30,6 +29,18 @@ for skill in {{ range .skills }}{{ . | squote }} {{ end }}; do
 done
 {{- end }}
 {{- end }}
+
+if command -v codex >/dev/null; then
+  echo "==> Codex plugins"
+{{- range $name, $_ := .agents.codex.config.managed.marketplaces }}
+  codex plugin marketplace upgrade {{ $name | squote }}
+{{- end }}
+{{- range .agents.codex.plugins }}
+  codex plugin add {{ . | squote }}
+{{- end }}
+else
+  echo "codex not on PATH; skipping plugins" >&2
+fi
 
 # --- Claude Code: plugins & MCP servers ---------------------------------------
 if command -v claude >/dev/null; then

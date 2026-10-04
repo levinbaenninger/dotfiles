@@ -121,6 +121,7 @@ Both agents are configured from one place:
 | MCP servers | `agents.mcp` in `home/.chezmoidata/agents.yaml` | Claude user scope (`claude mcp add-json`), `~/.codex/config.toml` |
 | Skills | `agents.skills` | `~/.agents/skills` (Codex reads it); entries with `claude: true` also link into `~/.claude/skills` |
 | Claude plugins | `agents.claude.plugins` | `claude plugin install` and `claude plugin update` |
+| Codex plugins | `agents.codex.plugins`, `agents.codex.config.managed.marketplaces` | `codex plugin marketplace upgrade` and `codex plugin add` |
 | Settings | `agents.claude.settings`, `agents.codex.config` | merged into `settings.json` / `config.toml` |
 | herdr hooks | – | `herdr integration install claude|codex` |
 
@@ -140,11 +141,11 @@ and skills.sh in Codex. The official marketplace pins an older commit. Beta
 and misc skills use shared copies in both agents. The dotfiles also
 manage `improve`, `unslop`, `find-skills`, and `show-me` for both.
 
-Selected pstack skills add code explanations, decision-history research,
-technical writing, verification workflows, and TypeScript guidance. Their
-`how` and `why` roles inherit the current agent's model through
-`~/.agents/pstack-models.md`. See [the full pstack comparison](docs/pstack-skills.md)
-for every skill, its dependencies, and overlap with Matt's skills.
+The full [Open Pstack plugin](https://github.com/ericlitman/open-pstack) installs
+as `pstack@open-pstack` in both agents. Codex's managed config registers its
+marketplace and enables subagents. Existing standalone pstack skills remain
+available alongside the plugin. The [pstack skill comparison](docs/pstack-skills.md)
+records the earlier standalone selection and its overlap with Matt's skills.
 
 Changing `agents.yaml` and running `chezmoi apply` refreshes the agent setup.
 To refresh upstream skills and plugins without changing the configuration:
@@ -153,7 +154,9 @@ To refresh upstream skills and plugins without changing the configuration:
 chezmoi execute-template --file ~/dotfiles/home/.chezmoiscripts/run_onchange_after_30-agents.sh.tmpl | bash
 ```
 
-Skills are available on the next turn; restart Claude Code to load plugin updates.
+Standalone skills are available on the next turn. Restart Claude Code or run
+`/reload-plugins` to load plugin updates. Start a new Codex task after installation
+or updates so it discovers the plugin skills and subagent setting.
 
 ## Work config and secrets
 

@@ -116,8 +116,10 @@ agents:
     marketplaces:
       - anthropics/claude-plugins-official
       - mattpocock/skills
+      - ericlitman/open-pstack
     plugins:
       - mattpocock-skills@mattpocock
+      - pstack@open-pstack
 
     # ~/.claude/settings.json is also written by Claude itself, so it is merged
     # rather than replaced. `defaults` only fill in missing keys (changes you
@@ -140,12 +142,15 @@ agents:
         agentPushNotifEnabled: true
         enabledPlugins:
           mattpocock-skills@mattpocock: true
+          pstack@open-pstack: true
       managed:
         statusLine:
           type: command
           command: bash ~/.claude/statusline-command.sh
 
   codex:
+    plugins:
+      - pstack@open-pstack
     # Same merge rules for ~/.codex/config.toml, which the Codex app rewrites
     # constantly (project trust, desktop prefs, plugin state).
     config:
@@ -156,10 +161,19 @@ agents:
         model_verbosity: low
         personality: pragmatic
         approvals_reviewer: auto_review
+        plugins:
+          pstack@open-pstack:
+            enabled: true
       managed:
+        marketplaces:
+          open-pstack:
+            source_type: git
+            source: https://github.com/ericlitman/open-pstack.git
+            ref: main
         features:
           hooks: true
           memories: false
+          multi_agent: true
         memories:
           generate_memories: false
           use_memories: false
