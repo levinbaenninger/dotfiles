@@ -1,10 +1,11 @@
 #!/usr/bin/env bash
 # Syncs the shared agent setup from .chezmoidata/agents.yaml:
 #   skills  -> ~/.agents/skills (Codex reads it directly), linked into ~/.claude/skills
+#   retired -> skills, plugins and marketplaces removed from both agents
 #   MCP     -> Claude Code user scope (Codex gets them via ~/.codex/config.toml)
 #   hooks   -> herdr's Claude/Codex integrations
 # Re-runs whenever that data (or the work flag) changes.
-# data hash: {{ list .agents.skills .agents.claude .agents.codex .agents.mcp .work | toJson | sha256sum }}
+# data hash: {{ list .agents.skills .agents.retired .agents.claude .agents.codex .agents.mcp .work | toJson | sha256sum }}
 # MCP JSON keeps $HOME/$ADO_ORG literal on purpose; sh expands them when the
 # server starts.
 # shellcheck disable=SC2016
@@ -19,6 +20,15 @@ export DO_NOT_TRACK=1 DISABLE_TELEMETRY=1
 # --- Skills ------------------------------------------------------------------
 echo "==> Agent skills"
 mkdir -p "$HOME/.claude/skills"
+# Retired skills: only those the skills CLI still tracks, so a p3-stack link of
+# the same name survives. Their Claude links are left dangling, so drop those.
+for skill in {{ range .agents.retired.skills }}{{ . | squote }} {{ end }}; do
+  if jq -e --arg s "$skill" '.skills[$s]' "$HOME/.agents/.skill-lock.json" >/dev/null 2>&1; then
+    npx -y skills@latest remove "$skill" --global --yes
+  fi
+  link="$HOME/.claude/skills/$skill"
+  if [[ -L "$link" && ! -e "$link" ]]; then rm "$link"; fi
+done
 {{- range .agents.skills }}
 npx -y skills@latest add {{ .source | squote }} --global --agent codex --yes
 {{- range .skills }} --skill {{ . | squote }}{{ end }}
@@ -32,7 +42,13 @@ done
 
 if command -v codex >/dev/null; then
   echo "==> Codex plugins"
-{{- range $name, $_ := .agents.codex.config.managed.marketplaces }}
+{{- range .agents.retired.codex.plugins }}
+  codex plugin remove {{ . | squote }} >/dev/null 2>&1 || true
+{{- end }}
+{{- range .agents.retired.codex.marketplaces }}
+  codex plugin marketplace remove {{ . | squote }} >/dev/null 2>&1 || true
+{{- end }}
+{{- range $name, $_ := get .agents.codex.config.managed "marketplaces" | default dict }}
   codex plugin marketplace upgrade {{ $name | squote }}
 {{- end }}
 {{- range .agents.codex.plugins }}
@@ -54,8 +70,13 @@ if command -v claude >/dev/null; then
   claude plugin install --scope user {{ . | squote }}
   claude plugin update --scope user {{ . | squote }}
 {{- end }}
-  # Retire the old marketplace copy after the upstream copy is installed.
-  claude plugin uninstall --scope user mattpocock-skills@claude-plugins-official >/dev/null 2>&1 || true
+  # Retire after installing, so a replacement is in place first.
+{{- range .agents.retired.claude.plugins }}
+  claude plugin uninstall --scope user {{ . | squote }} >/dev/null 2>&1 || true
+{{- end }}
+{{- range .agents.retired.claude.marketplaces }}
+  claude plugin marketplace remove {{ . | squote }} >/dev/null 2>&1 || true
+{{- end }}
 
   echo "==> Claude Code MCP servers"
   # Only touch servers whose definition changed: re-adding one resets its

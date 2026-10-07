@@ -120,6 +120,8 @@ Both agents are configured from one place:
 | Global instructions | `home/.chezmoitemplates/agents.md` | `~/.claude/CLAUDE.md`, `~/.codex/AGENTS.md` |
 | MCP servers | `agents.mcp` in `home/.chezmoidata/agents.yaml` | Claude user scope (`claude mcp add-json`), `~/.codex/config.toml` |
 | Skills | `agents.skills` | `~/.agents/skills` (Codex reads it); entries with `claude: true` also link into `~/.claude/skills` |
+| p3-stack | `agents.p3stack` | cloned to `~/.local/share/p3-stack`, skills linked into both skills dirs |
+| Removals | `agents.retired` | skills, plugins and marketplaces removed from both agents |
 | Claude plugins | `agents.claude.plugins` | `claude plugin install` and `claude plugin update` |
 | Codex plugins | `agents.codex.plugins`, `agents.codex.config.managed.marketplaces` | `codex plugin marketplace upgrade` and `codex plugin add` |
 | Settings | `agents.claude.settings`, `agents.codex.config` | merged into `settings.json` / `config.toml` |
@@ -137,15 +139,23 @@ missing keys, so a change you make in the app sticks on that machine. `managed`
 keys always win. To change a default everywhere, edit `agents.yaml`.
 
 Matt Pocock's released skills come from his own plugin marketplace in Claude
-and skills.sh in Codex. The official marketplace pins an older commit. Beta
-and misc skills use shared copies in both agents. The dotfiles also
-manage `improve`, `unslop`, `find-skills`, and `show-me` for both.
+and skills.sh in Codex. The official marketplace pins an older commit. Misc
+skills use shared copies in both agents. The dotfiles also manage `improve`,
+`find-skills`, and `show-me` for both.
 
-The full [Open Pstack plugin](https://github.com/ericlitman/open-pstack) installs
-as `pstack@open-pstack` in both agents. Codex's managed config registers its
-marketplace and enables subagents. Existing standalone pstack skills remain
-available alongside the plugin. The [pstack skill comparison](docs/pstack-skills.md)
-records the earlier standalone selection and its overlap with Matt's skills.
+[p3-stack](https://github.com/uzairansaruzi/p3-stack) is pstack rebuilt for
+T3 Code: `/p3-mode`, its playbooks, principles and review skills, wired to T3's
+delegation, worktree and PR-watching tools. chezmoi clones it (refreshed
+weekly) rather than installing it with the skills CLI, because its skills
+reference files elsewhere in the repo. `run_after_31-p3-stack.sh` links the
+skills into both agents on every apply. Its `tdd` and `teach` are skipped in
+favour of Matt's. Its model sheet, `home/dot_agents/p3-models.md`, comes from
+`/setup-p3` and uses T3's default provider IDs (`codex`, `claudeAgent`). After
+re-running `/setup-p3`, save the result with `chezmoi add ~/.agents/p3-models.md`.
+To pull p3-stack before the weekly refresh, run `chezmoi apply --refresh-externals`.
+
+To drop a skill or plugin everywhere, remove it from its list and add it to
+`agents.retired`. The next apply removes it on each machine.
 
 Changing `agents.yaml` and running `chezmoi apply` refreshes the agent setup.
 To refresh upstream skills and plugins without changing the configuration:

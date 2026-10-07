@@ -78,20 +78,12 @@ agents:
       skills:
         - claude-handoff
         - git-guardrails-claude-code
-        - loop-me
         - migrate-to-shoehorn
         - scaffold-exercises
         - setup-pre-commit
-        - setup-ts-deep-modules
-        - writing-beats
-        - writing-fragments
-        - writing-shape
       claude: true
     - source: shadcn/improve
       skills: [improve]
-      claude: true
-    - source: cursor/plugins
-      skills: [unslop]
       claude: true
     - source: vercel-labs/skills
       skills: [find-skills]
@@ -99,27 +91,58 @@ agents:
     - source: humanlayer/skills
       skills: [show-me]
       claude: true
-    # Complement Matt's workflow; keep his tdd and teach, and the existing unslop.
-    - source: backnotprop/pstack
-      skills:
-        - how
-        - why
-        - technical-writing
-        - create-verification-skill
-        - maintain-verification-skill
-        - typescript-best-practices
-        - principle-type-system-discipline
-        - principle-boundary-discipline
-      claude: true
+
+  # p3-stack: pstack rebuilt for T3 Code. Cloned to `path` by
+  # .chezmoiexternal.toml.tmpl instead of installed with the skills CLI, because
+  # its skills reference agents/ and README.md elsewhere in the repo.
+  # run_after_31-p3-stack.sh links every skills/* into ~/.agents/skills and
+  # ~/.claude/skills.
+  p3stack:
+    repo: https://github.com/uzairansaruzi/p3-stack.git
+    path: .local/share/p3-stack
+    exclude: [tdd, teach] # Matt's versions win
+
+  # Removed on every machine by run_onchange_after_30-agents.sh. Drop an entry
+  # once every machine has applied it.
+  retired:
+    skills:
+      # Replaced by p3-stack.
+      - how
+      - why
+      - technical-writing
+      - create-verification-skill
+      - maintain-verification-skill
+      - typescript-best-practices
+      - principle-type-system-discipline
+      - principle-boundary-discipline
+      - unslop
+      # Matt's beta skills, and one he dropped upstream.
+      - loop-me
+      - setup-ts-deep-modules
+      - writing-beats
+      - writing-fragments
+      - writing-shape
+      - resolving-merge-conflicts
+    claude:
+      plugins:
+        - pstack@open-pstack
+        - claude-obsidian@agricidaniel-claude-obsidian
+        - mattpocock-skills@claude-plugins-official
+      marketplaces:
+        - open-pstack
+        - agricidaniel-claude-obsidian
+    codex:
+      plugins:
+        - pstack@open-pstack
+      marketplaces:
+        - open-pstack
 
   claude:
     marketplaces:
       - anthropics/claude-plugins-official
       - mattpocock/skills
-      - ericlitman/open-pstack
     plugins:
       - mattpocock-skills@mattpocock
-      - pstack@open-pstack
 
     # ~/.claude/settings.json is also written by Claude itself, so it is merged
     # rather than replaced. `defaults` only fill in missing keys (changes you
@@ -142,15 +165,13 @@ agents:
         agentPushNotifEnabled: true
         enabledPlugins:
           mattpocock-skills@mattpocock: true
-          pstack@open-pstack: true
       managed:
         statusLine:
           type: command
           command: bash ~/.claude/statusline-command.sh
 
   codex:
-    plugins:
-      - pstack@open-pstack
+    plugins: []
     # Same merge rules for ~/.codex/config.toml, which the Codex app rewrites
     # constantly (project trust, desktop prefs, plugin state).
     config:
@@ -161,15 +182,7 @@ agents:
         model_verbosity: low
         personality: pragmatic
         approvals_reviewer: auto_review
-        plugins:
-          pstack@open-pstack:
-            enabled: true
       managed:
-        marketplaces:
-          open-pstack:
-            source_type: git
-            source: https://github.com/ericlitman/open-pstack.git
-            ref: main
         features:
           hooks: true
           memories: false

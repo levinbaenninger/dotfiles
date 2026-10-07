@@ -1,0 +1,7 @@
+# p3-stack checkout; see agents.p3stack in .chezmoidata/agents.yaml.
+[{{ .agents.p3stack.path | quote }}]
+    type = "git-repo"
+    url = {{ .agents.p3stack.repo | quote }}
+    refreshPeriod = "168h"
+    clone.args = ["--depth", "1"]
+    pull.args = ["--ff-only"]

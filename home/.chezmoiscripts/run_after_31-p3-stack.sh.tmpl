@@ -1,0 +1,31 @@
+#!/usr/bin/env bash
+# Links p3-stack's skills (agents.p3stack in .chezmoidata/agents.yaml) into
+# ~/.agents/skills and ~/.claude/skills. Runs on every apply so skills added or
+# removed upstream follow the weekly refresh of the checkout.
+set -euo pipefail
+repo="$HOME/{{ .agents.p3stack.path }}"
+exclude=" {{ .agents.p3stack.exclude | join " " }} "
+[[ -d "$repo/skills" ]] || { echo "p3-stack: $repo missing; skipping" >&2; exit 0; }
+mkdir -p "$HOME/.agents/skills" "$HOME/.claude/skills"
+
+for dir in "$repo"/skills/*/; do
+  skill="$(basename "$dir")"
+  [[ "$exclude" == *" $skill "* ]] && continue
+  target="$HOME/.agents/skills/$skill"
+  if [[ -e "$target" && ! -L "$target" ]]; then
+    echo "p3-stack: skip $skill ($target is not a symlink)" >&2
+    continue
+  fi
+  ln -sfn "${dir%/}" "$target"
+  ln -sfn "../../.agents/skills/$skill" "$HOME/.claude/skills/$skill"
+done
+
+# Drop links to skills that are gone upstream or now excluded.
+for link in "$HOME"/.agents/skills/* "$HOME"/.claude/skills/*; do
+  [[ -L "$link" ]] || continue
+  skill="$(basename "$link")"
+  case "$(readlink "$link")" in
+    "$repo"/skills/*) [[ -e "$link" && "$exclude" != *" $skill "* ]] || rm "$link" ;;
+    ../../.agents/skills/*) [[ -e "$link" ]] || rm "$link" ;;
+  esac
+done

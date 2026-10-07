@@ -45,6 +45,20 @@
 {{-   end -}}
 {{-   $_ := set $servers $name $new -}}
 {{- end -}}
+{{- /* Hook trust entries outlive their plugin; drop those of retired plugins. */ -}}
+{{- $hooks := get $out "hooks" -}}
+{{- if kindIs "map" $hooks -}}
+{{-   $state := get $hooks "state" -}}
+{{-   if kindIs "map" $state -}}
+{{-     range $key, $_ := $state -}}
+{{-       range $plugin := $.agents.retired.codex.plugins -}}
+{{-         if hasPrefix (printf "%s:" $plugin) $key -}}
+{{-           $_ := unset $state $key -}}
+{{-         end -}}
+{{-       end -}}
+{{-     end -}}
+{{-   end -}}
+{{- end -}}
 {{- if and (.chezmoi.stdin | trim) (eq (toJson $out) (toJson $cur)) -}}
 {{-   .chezmoi.stdin -}}
 {{- else -}}
