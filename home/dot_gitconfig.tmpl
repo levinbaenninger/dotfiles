@@ -1,9 +1,11 @@
-{{- $serverSigningKey := joinPath .chezmoi.homeDir ".ssh/id_ed25519_signing_r2d2" -}}
-{{- $serverSigns := and (eq .profile "linux") (lstat $serverSigningKey) -}}
+{{- /* The Mac and R2-D2 sign with a local, signing-only key so unattended
+       agents can commit without a 1Password Touch ID prompt. */ -}}
+{{- $localSigningKey := joinPath .chezmoi.homeDir (ternary ".ssh/id_ed25519_signing_falcon" ".ssh/id_ed25519_signing_r2d2" (eq .profile "mac")) -}}
+{{- $localSigns := and (ne .profile "wsl") (lstat $localSigningKey) -}}
 [user]
 	name = Levin Bänninger
 	email = levin@baenninger.me
-	signingkey = {{ if $serverSigns }}{{ $serverSigningKey }}{{ else }}ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIMuaNccuT9k3GO2o9biMGqvHcyz6GGKvtvtIODgc1Dlg{{ end }}
+	signingkey = {{ if $localSigns }}{{ $localSigningKey }}{{ else }}ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIMuaNccuT9k3GO2o9biMGqvHcyz6GGKvtvtIODgc1Dlg{{ end }}
 [core]
 	pager = delta
 {{- if eq .profile "wsl" }}
@@ -37,15 +39,16 @@
 [include]
 	path = ~/.gitconfig.local
 
-{{- /* Desktop machines use 1Password. R2-D2 signs with its local, signing-only
-       key when it exists; other headless machines leave signing disabled. */}}
+{{- /* WSL signs through 1Password. The Mac and R2-D2 use their local key when it
+       exists; the Mac falls back to 1Password without one. Other headless
+       machines leave signing disabled. */}}
 {{- $signer := "" }}
-{{- if eq .profile "mac" }}
+{{- if $localSigns }}
+{{-   $signer = "ssh-keygen" }}
+{{- else if eq .profile "mac" }}
 {{-   $signer = "/Applications/1Password.app/Contents/MacOS/op-ssh-sign" }}
 {{- else if eq .profile "wsl" }}
 {{-   $signer = lookPath "op-ssh-sign-wsl.exe" | default (lookPath "op-ssh-sign-wsl") }}
-{{- else if $serverSigns }}
-{{-   $signer = "ssh-keygen" }}
 {{- end }}
 {{- if $signer }}
 [gpg]
@@ -65,6 +68,14 @@
 [credential "https://gist.github.com"]
 	helper =
 	helper = !{{ $gh }} auth git-credential
+{{- if eq .profile "mac" }}
+
+# Talk to GitHub over HTTPS (gh's token) instead of SSH, so fetch and push
+# don't wait for a 1Password Touch ID prompt either.
+[url "https://github.com/"]
+	insteadOf = git@github.com:
+	insteadOf = ssh://git@github.com/
+{{- end }}
 
 {{- if and .work .headless }}
 

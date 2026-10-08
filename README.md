@@ -15,7 +15,7 @@ bash -c "$(curl -fsSL https://raw.githubusercontent.com/levinbaenninger/dotfiles
 
 | Profile | Detected by | Differences |
 | --- | --- | --- |
-| `mac` | macOS | `Brewfile.mac` (apps, fonts), SSH via 1Password agent, commit signing |
+| `mac` | macOS | `Brewfile.mac` (apps, fonts), SSH via 1Password agent, commit signing with a local key |
 | `wsl` | `microsoft` in the kernel release | `ssh.exe` + 1Password's WSL signer, work mode on by default |
 | `linux` | anything else | headless, no signing |
 
@@ -47,9 +47,9 @@ machine or account if those need strict isolation.
 
 Personal commits and tags on R2-D2 use the local SSH signing key at
 `~/.ssh/id_ed25519_signing_r2d2`. The key is only for signing, and its private
-half stays on the server outside this repo. The Mac and WSL still use the
-1Password signer. Work repos disable signing, including on R2-D2. If the server
-is rebuilt, create a new signing key and register its public half with GitHub.
+half stays on the server outside this repo. WSL still uses the 1Password signer.
+Work repos disable signing, including on R2-D2. If the server is rebuilt, create
+a new signing key and register its public half with GitHub.
 
 Before the first install, copy the `Work/dotfiles` 1Password item from the Mac
 to `~/.config/dotfiles/work-secrets.json` on the server. This sends the item,
@@ -108,6 +108,22 @@ on the server.
   `systemctl --user status dev-tunnel` or `journalctl --user -u dev-tunnel`.
 - A port already in use locally is skipped and logged. Stop the local server
   and restart the tunnel to get it back.
+
+### Commit signing on the Mac
+
+Personal commits and tags on the Mac use the local SSH signing key at
+`~/.ssh/id_ed25519_signing_falcon`, not 1Password, so agents running
+unattended can commit without a Touch ID prompt. Git also talks to GitHub over
+HTTPS with `gh`'s token, so fetch and push don't prompt either. Interactive
+`ssh` still goes through 1Password. Without the key the Mac falls back to the
+1Password signer. To set it up on a new Mac:
+
+```bash
+ssh-keygen -t ed25519 -N '' -C 'falcon signing' -f ~/.ssh/id_ed25519_signing_falcon
+gh ssh-key add --type signing --title 'falcon signing' ~/.ssh/id_ed25519_signing_falcon.pub
+gh config set -h github.com git_protocol https
+chezmoi apply ~/.gitconfig
+```
 
 ## Day to day
 
