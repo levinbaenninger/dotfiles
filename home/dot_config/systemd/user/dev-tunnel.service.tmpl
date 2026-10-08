@@ -1,21 +1,13 @@
-{{- $host := index .fleet.work 0 -}}
 # Managed by chezmoi (WSL work laptop only). The work network only lets 443
-# and SSH out. This forwards the dev-server ports (fleet.ports in
-# .chezmoidata/fleet.yaml) from the server to localhost. Windows apps reach
+# and SSH out. This forwards every port listening on the server's localhost
+# to localhost here, shifted by 10000 (5173 -> 15173). Windows apps reach
 # them through WSL's localhost forwarding.
 [Unit]
-Description=Forward dev-server ports from {{ $host }} to localhost
+Description=Forward dev-server ports from {{ .fleet.tunnelHost }} to localhost
 
 [Service]
 # WSL's ssh uses its own key to authenticate to the Hetzner server.
-# A port already taken locally is skipped instead of failing the tunnel.
-ExecStart={{ lookPath "ssh" | default "/usr/bin/ssh" }} -N \
-  -o BatchMode=yes -o ExitOnForwardFailure=no \
-  -o ServerAliveInterval=30 -o ServerAliveCountMax=3 \
-{{- range .fleet.ports }}
-  -L {{ . }}:localhost:{{ . }} \
-{{- end }}
-  {{ $host }}
+ExecStart=/bin/bash %h/.local/bin/dev-tunnel {{ .fleet.tunnelHost }}
 Restart=always
 RestartSec=15
 

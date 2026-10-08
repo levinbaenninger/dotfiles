@@ -32,3 +32,14 @@
 .config/systemd
 .config/systemd/**
 {{- end }}
+
+{{- if ne .profile "mac" }}
+# launchd agents (dev-tunnel) are macOS only.
+Library
+Library/**
+{{- end }}
+
+{{- if not (or (eq .profile "mac") (and .work (eq .profile "wsl"))) }}
+# The dev-server port tunnel runs on the Mac and the WSL work laptop.
+.local/bin/dev-tunnel
+{{- end }}

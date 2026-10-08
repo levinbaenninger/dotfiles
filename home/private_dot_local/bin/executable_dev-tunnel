@@ -1,0 +1,62 @@
+#!/bin/bash
+# Forward every TCP port listening on a remote host's localhost to this
+# machine's localhost, shifted by 10000 (5173 -> 15173), over one SSH
+# connection. Remote ports are re-checked every few seconds, so there is no
+# port list. Runs as a launchd agent (Mac) or systemd user service (WSL).
+#
+#   dev-tunnel HOST [SSH_OPTION...]
+#
+# Ports 1024-32767 only: higher ones are Linux's ephemeral range and would
+# leave 65535. Written for macOS's bash 3.2 (no associative arrays).
+set -uo pipefail
+
+host=$1
+shift
+offset=10000 min=1024 max=32767 interval=3
+sock="$HOME/.ssh/dev-tunnel-$host.sock"
+ssh=(ssh -S "$sock" -o BatchMode=yes -o ExitOnForwardFailure=no
+  -o ServerAliveInterval=15 -o ServerAliveCountMax=2 "$@")
+
+# Remote ports reachable through localhost (loopback or wildcard address).
+listening() {
+  "${ssh[@]}" "$host" ss -tlnH | awk -v min=$min -v max=$max '{
+    i = match($4, /:[0-9]+$/); addr = substr($4, 1, i - 1); port = substr($4, i + 1) + 0
+    if (port < min || port > max) next
+    if (addr ~ /^(127\.|\[::1\]|0\.0\.0\.0|\[::\]|\*)/) print port
+  }' | sort -un
+}
+
+# forward|cancel PORT
+control() {
+  local spec="$(($2 + offset)):localhost:$2"
+  if "${ssh[@]}" -O "$1" -L "$spec" "$host" 2>/dev/null; then
+    echo "$1 localhost:$(($2 + offset)) -> $host:$2"
+  else
+    echo "$1 localhost:$(($2 + offset)) failed (port taken locally?)" >&2
+  fi
+}
+
+master=
+trap '[[ -n $master ]] && kill "$master" 2>/dev/null; rm -f "$sock"; exit 0' INT TERM
+
+while :; do
+  rm -f "$sock"
+  "${ssh[@]}" -M -N "$host" &
+  master=$!
+  forwarded=" "
+  while kill -0 "$master" 2>/dev/null; do
+    if "${ssh[@]}" -O check "$host" 2>/dev/null && ports=$(listening); then
+      ports=" ${ports//$'\n'/ } "
+      for p in $ports; do
+        case $forwarded in *" $p "*) ;; *) control forward "$p"; forwarded="$forwarded$p " ;; esac
+      done
+      for p in $forwarded; do
+        case $ports in *" $p "*) ;; *) control cancel "$p"; forwarded=${forwarded/ $p / } ;; esac
+      done
+    fi
+    sleep $interval & wait $!  # backgrounded so a TERM is handled at once
+  done
+  wait "$master"
+  echo "connection to $host closed; reconnecting in 10s" >&2
+  sleep 10 & wait $!
+done

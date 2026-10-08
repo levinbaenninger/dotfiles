@@ -84,19 +84,30 @@ Connect account in the client and select this environment. See the
 and [background service](https://github.com/pingdotgg/t3code/blob/main/docs/user/background-service.md)
 guides.
 
-**Dev servers from the work laptop:** `chezmoi apply` on WSL enables
-`dev-tunnel.service`. It forwards the ports in `fleet.ports` from R2-D2 to the
-laptop's localhost over SSH. Listen on `127.0.0.1` on the server and open
-`http://localhost:<port>/` on the laptop, including in T3 Code preview.
+**Dev servers from the Mac and the work laptop:** `chezmoi apply` starts
+`~/.local/bin/dev-tunnel` as a launchd agent on the Mac and as
+`dev-tunnel.service` on WSL. It keeps one SSH connection to R2-D2 open and
+checks every 3 seconds which ports are listening on R2-D2's localhost. Each
+port from 1024 to 32767 is forwarded to the local machine's localhost with
+10000 added, so 5173 on R2-D2 opens as `http://localhost:15173/`, including in
+T3 Code preview. There is no port list: a new dev server shows up within a few
+seconds and disappears when it stops. Listen on `127.0.0.1` (or `localhost`)
+on the server.
 
+- The Mac uses its own key, `~/.ssh/id_ed25519_dev_tunnel`, not 1Password, so
+  the tunnel reconnects after sleep without prompting. `chezmoi apply` creates
+  the key and prints the line for R2-D2's `~/.ssh/authorized_keys`. The line
+  limits the key to forwarding to localhost and listing ports:
+  `restrict,port-forwarding,permitopen="localhost:*",command="ss -tlnH" ssh-ed25519 …`.
+  Log: `~/Library/Logs/dev-tunnel.log`. Restart:
+  `launchctl kickstart -k gui/$UID/com.github.levinbaenninger.dev-tunnel`.
 - WSL's `ssh` needs a key accepted by the Hetzner server without a prompt.
   Check with `env -i HOME="$HOME" ssh -o BatchMode=yes levin@r2-d2 true`
   in WSL. Add that user's public key to the server's `~/.ssh/authorized_keys`
-  if needed.
-- Keep WSL running for the tunnel. Check it with
-  `systemctl --user status dev-tunnel`.
-- A port already in use in WSL is skipped. Stop the local server and run
-  `systemctl --user restart dev-tunnel` to get it back.
+  if needed. Keep WSL running for the tunnel. Check it with
+  `systemctl --user status dev-tunnel` or `journalctl --user -u dev-tunnel`.
+- A port already in use locally is skipped and logged. Stop the local server
+  and restart the tunnel to get it back.
 
 ## Day to day
 

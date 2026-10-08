@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!-- Managed by chezmoi (Mac only). Forwards every port listening on the
+     server's localhost to localhost here, shifted by 10000 (5173 -> 15173).
+     Authenticates with its own key, not 1Password, so it reconnects after
+     sleep without prompting. -->
+<plist version="1.0">
+<dict>
+	<key>Label</key>
+	<string>com.github.levinbaenninger.dev-tunnel</string>
+	<key>ProgramArguments</key>
+	<array>
+		<string>/bin/bash</string>
+		<string>{{ .chezmoi.homeDir }}/.local/bin/dev-tunnel</string>
+		<string>{{ .fleet.tunnelHost }}</string>
+		<string>-o</string>
+		<string>IdentityAgent=none</string>
+		<string>-o</string>
+		<string>IdentitiesOnly=yes</string>
+		<string>-i</string>
+		<string>{{ .chezmoi.homeDir }}/.ssh/id_ed25519_dev_tunnel</string>
+	</array>
+	<key>RunAtLoad</key>
+	<true/>
+	<key>KeepAlive</key>
+	<true/>
+	<key>StandardOutPath</key>
+	<string>{{ .chezmoi.homeDir }}/Library/Logs/dev-tunnel.log</string>
+	<key>StandardErrorPath</key>
+	<string>{{ .chezmoi.homeDir }}/Library/Logs/dev-tunnel.log</string>
+</dict>
+</plist>

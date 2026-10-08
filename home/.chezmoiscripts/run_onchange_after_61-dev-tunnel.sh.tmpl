@@ -1,7 +1,29 @@
-{{ if and .work (eq .profile "wsl") -}}
+{{ if eq .profile "mac" -}}
 #!/usr/bin/env bash
-# Keep the dev-server port tunnel to the work server running (WSL work laptop).
-# unit: {{ include "dot_config/systemd/user/dev-tunnel.service.tmpl" | sha256sum }} ports: {{ join " " .fleet.ports }} host: {{ index .fleet.work 0 }}
+# Keep the dev-server port tunnel to the server running (Mac).
+# agent: {{ include "private_Library/LaunchAgents/com.github.levinbaenninger.dev-tunnel.plist.tmpl" | sha256sum }} script: {{ include "private_dot_local/bin/executable_dev-tunnel" | sha256sum }}
+set -euo pipefail
+key="$HOME/.ssh/id_ed25519_dev_tunnel"
+label=com.github.levinbaenninger.dev-tunnel
+if [[ ! -f $key ]]; then
+  ssh-keygen -q -t ed25519 -N '' -C "$(hostname -s) dev-tunnel" -f "$key"
+fi
+if ! ssh -o BatchMode=yes -o IdentityAgent=none -o IdentitiesOnly=yes -i "$key" {{ .fleet.tunnelHost }} true >/dev/null 2>&1; then
+  echo "Add this line to ~/.ssh/authorized_keys on {{ .fleet.tunnelHost }}. The tunnel then connects within a few seconds:" >&2
+  echo "restrict,port-forwarding,permitopen=\"localhost:*\",command=\"ss -tlnH\" $(cat "$key.pub")" >&2
+fi
+launchctl bootout "gui/$UID/$label" 2>/dev/null || true
+# bootout returns before the old agent is gone; bootstrap fails until it is.
+for _ in {1..50}; do
+  launchctl print "gui/$UID/$label" >/dev/null 2>&1 || break
+  sleep 0.2
+done
+launchctl bootstrap "gui/$UID" "$HOME/Library/LaunchAgents/$label.plist"
+echo "Dev-server port tunnel enabled (log: ~/Library/Logs/dev-tunnel.log)."
+{{ else if and .work (eq .profile "wsl") -}}
+#!/usr/bin/env bash
+# Keep the dev-server port tunnel to the server running (WSL work laptop).
+# unit: {{ include "dot_config/systemd/user/dev-tunnel.service.tmpl" | sha256sum }} script: {{ include "private_dot_local/bin/executable_dev-tunnel" | sha256sum }} host: {{ .fleet.tunnelHost }}
 set -euo pipefail
 if ! systemctl --user show-environment >/dev/null 2>&1; then
   echo "WSL has no systemd: add '[boot]' + 'systemd=true' to /etc/wsl.conf, run 'wsl --shutdown' in Windows, then 'chezmoi apply' again." >&2

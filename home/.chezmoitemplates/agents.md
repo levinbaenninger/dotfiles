@@ -17,8 +17,8 @@ Source: ~/dotfiles/home/.chezmoitemplates/agents.md. Edit there, then `chezmoi a
 - Windows tools are reachable with the `.exe` suffix (e.g. `op.exe`, `ssh.exe`).
 {{ else -}}
 - Linux server. Packages come from Homebrew on Linux (`~/dotfiles/Brewfile`).
+- Dev servers: listen on localhost on any port from 1024 to 32767. The user's Mac and work laptop forward every such port to their own localhost with 10000 added, so give the user `http://localhost:<port + 10000>/` (5173 → `http://localhost:15173/`) for their browser or T3 Code preview. Check the server here at `http://localhost:<port>/`.
 {{- if .work }}
-- Dev servers: listen on localhost on one of the ports {{ join ", " .fleet.ports }}. The work laptop forwards these ports over SSH, so give the user `http://localhost:<port>/` for its browser or T3 Code preview. Check the server locally at the same URL.
 - Azure DevOps (git over HTTPS and the ADO MCP server) uses the PAT in `~/.config/dotfiles/work.env`. Never print, log or commit it. If access fails, check the PAT renewal steps in the dotfiles README.
 {{- end }}
 {{ end -}}

@@ -4,8 +4,9 @@ fleet:
   # work laptop. These SSH targets must resolve there over Tailscale.
   work:
     - levin@r2-d2
-  # Dev-server ports forwarded from the first work host to the work laptop.
-  ports: [3000, 3001, 4173, 4200, 4300, 4301, 4400, 5173, 5174, 6006, 8000, 8080]
+  # Server whose localhost ports the Mac and the work laptop forward to their
+  # own localhost, shifted by 10000 (~/.local/bin/dev-tunnel).
+  tunnelHost: levin@r2-d2
   # Hostname -> name shown in prompts.
   hosts:
     Millennium-Falcon: falcon
