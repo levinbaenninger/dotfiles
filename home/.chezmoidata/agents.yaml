@@ -91,6 +91,9 @@ agents:
     - source: humanlayer/skills
       skills: [show-me]
       claude: true
+    - source: Leonxlnx/taste-skill
+      skills: [design-taste-frontend]
+      claude: true
 
   # p3-stack: pstack rebuilt for T3 Code. Cloned to `path` by
   # .chezmoiexternal.toml.tmpl instead of installed with the skills CLI, because
