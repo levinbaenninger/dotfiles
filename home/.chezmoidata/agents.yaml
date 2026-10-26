@@ -27,10 +27,11 @@ agents:
         args:
           - -c
           # PAT when 1Password has ado_pat (pat mode wants base64 "user:token"),
-          # otherwise the Azure CLI login.
+          # otherwise the Azure CLI login. Write $VAR, not ${VAR:-}: Claude
+          # Code expands ${...} itself before sh runs, with its own env.
           - >-
             . "$HOME/.config/dotfiles/work.env" &&
-            if [ -n "${ADO_PAT:-}" ]; then
+            if [ -n "$ADO_PAT" ]; then
             export PERSONAL_ACCESS_TOKEN="$(printf 'pat:%s' "$ADO_PAT" | base64 | tr -d '\n')";
             exec npx -y @azure-devops/mcp "$ADO_ORG" --authentication pat;
             else exec npx -y @azure-devops/mcp "$ADO_ORG" --authentication azcli; fi

@@ -2,9 +2,14 @@
 # 1Password alive; see ~/dotfiles/scripts/renew-ado-pat.sh.
 [Unit]
 Description=Renew the Azure DevOps PAT (1Password Work/dotfiles ado_pat) when it nears expiry
+# A failed run retries every 15 minutes, at most 12 times a day.
+StartLimitIntervalSec=1d
+StartLimitBurst=12
 
 [Service]
 Type=oneshot
+Restart=on-failure
+RestartSec=15min
 ExecStart={{ .chezmoi.homeDir }}/dotfiles/scripts/renew-ado-pat.sh
 Environment=DOTFILES_DIR={{ .chezmoi.homeDir }}/dotfiles
 Environment=ADO_PAT_PUSH_HOSTS={{ join " " .fleet.work }}

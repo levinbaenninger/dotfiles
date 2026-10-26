@@ -28,6 +28,8 @@
 {{- end }}
 
 {{- if not (and .work (eq .profile "wsl")) }}
+# `az` wrapper that borrows the Windows Azure CLI's login: WSL work laptop only.
+.local/bin/az
 # Azure DevOps PAT renewal runs on the WSL work laptop only.
 .config/systemd
 .config/systemd/**

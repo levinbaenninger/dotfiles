@@ -1,0 +1,83 @@
+#!/usr/bin/env bash
+# `az` on the WSL work laptop. Conditional Access ends a Linux `az login` after
+# four hours (AADSTS70043). The Windows Azure CLI signs in through WAM with the
+# laptop's Windows login and keeps getting tokens silently, except for Azure
+# Resource Manager, which wants recent MFA on either side. So:
+#
+#   - Azure DevOps groups (repos, pipelines, boards, devops, artifacts) run on
+#     Linux `az`, so `--detect` reads the WSL git repo, with an Entra token from
+#     Windows `az` as AZURE_DEVOPS_EXT_PAT (Azure DevOps accepts it).
+#   - `az account get-access-token` for anything but ARM (Azure DevOps, Graph,
+#     Key Vault, ...) asks Windows `az` first. That covers SDKs, MCP servers
+#     and scripts that use the Azure CLI as their credential.
+#   - Everything else, including `az login` and all ARM commands, is plain
+#     Linux `az`.
+#
+# AZ_LINUX=1 skips the Windows CLI.
+set -uo pipefail
+
+self=$(readlink -f "${BASH_SOURCE[0]}")
+win_py="${AZ_WINDOWS_CLI:-/mnt/c/Program Files/Microsoft SDKs/Azure/CLI2}/python.exe"
+ado_resource=499b84ac-1321-427f-aa17-267ca6975798 # Azure DevOps' Entra app ID
+
+linux_az() {
+  local dir IFS=:
+  # Not every caller has Homebrew on PATH (the T3 Code server doesn't).
+  for dir in $PATH /home/linuxbrew/.linuxbrew/bin; do
+    [[ "$dir" == /mnt/* || ! -x "$dir/az" || "$(readlink -f "$dir/az")" == "$self" ]] && continue
+    exec "$dir/az" "$@"
+  done
+  echo "az: no Linux Azure CLI found (brew install azure-cli)" >&2
+  exit 127
+}
+
+windows_az() { # run Windows `az` quietly; stdout with LF line endings
+  "$win_py" -IBm azure.cli "$@" 2>/dev/null | tr -d '\r'
+  return "${PIPESTATUS[0]}"
+}
+
+ado_token() { # Entra token for Azure DevOps from Windows `az`, cached until near expiry
+  local cache="${XDG_RUNTIME_DIR:-/tmp}/az-ado-token-$UID" expires='' token='' now
+  printf -v now '%(%s)T' -1
+  if [[ -r "$cache" ]] && { read -r expires && read -r token; } <"$cache" && ((expires - now > 300)); then
+    printf '%s' "$token"
+    return
+  fi
+  { read -r expires && read -r token; } < <(
+    windows_az account get-access-token --resource "$ado_resource" --query '[expires_on, accessToken]' --output tsv
+  )
+  [[ "$expires" =~ ^[0-9]+$ && -n "$token" ]] || return 1
+  (umask 077 && printf '%s\n%s\n' "$expires" "$token" >"$cache.$$" && mv -f "$cache.$$" "$cache")
+  printf '%s' "$token"
+}
+
+is_arm_token_request() { # ARM is the default when no resource, type or scope is given
+  local arg target=
+  for arg in "${@:3}"; do
+    case "$target" in
+      next) target=$arg; break ;;
+    esac
+    case "$arg" in
+      --resource | --resource-type | --scope | --scopes) target=next ;;
+      --resource=* | --resource-type=* | --scope=* | --scopes=*) target=${arg#*=}; break ;;
+    esac
+  done
+  [[ -z "$target" || "$target" == next || "$target" == arm || "$target" == *management.* ]]
+}
+
+[[ "${AZ_LINUX:-}" == 1 || ! -x "$win_py" ]] && linux_az "$@"
+
+case "${1:-} ${2:-}" in
+  "repos "* | "pipelines "* | "boards "* | "devops "* | "artifacts "*)
+    if [[ -z "${AZURE_DEVOPS_EXT_PAT:-}" ]] && token=$(ado_token); then
+      export AZURE_DEVOPS_EXT_PAT="$token"
+    fi
+    ;;
+  "account get-access-token")
+    if ! is_arm_token_request "$@" && out=$(windows_az "$@"); then
+      printf '%s\n' "$out"
+      exit 0
+    fi
+    ;;
+esac
+linux_az "$@"

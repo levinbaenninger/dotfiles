@@ -254,12 +254,23 @@ MCP server fall back to `az login` and npm to `npm_pat`.
   scopes, stores it in `ado_pat`, pushes it to the work hosts (`work:` in
   `.chezmoidata/fleet.yaml`) and revokes the old one.
 
-Problems (e.g. an expired `az login`) show up as a warning when a new shell
-starts. By hand: `scripts/renew-ado-pat.sh --check` (report only) or `--force`.
-The PAT must be named `dotfiles` in Azure DevOps (or set `ADO_PAT_NAME`).
+Problems show up as a warning when a new shell starts; a failed run retries
+every 15 minutes. By hand: `scripts/renew-ado-pat.sh --check` (report only) or
+`--force`. The PAT must be named `dotfiles` in Azure DevOps (or set
+`ADO_PAT_NAME`).
+
+Conditional Access ends a Linux `az login` after four hours. The Windows Azure
+CLI signs in through WAM and keeps getting tokens silently, except for Azure
+Resource Manager, which wants recent MFA either way. So on the laptop
+`~/.local/bin/az` borrows the Windows CLI's login for Azure DevOps commands
+(`az repos`, `pipelines`, `boards`, `devops`, `artifacts`) and for non-ARM
+`az account get-access-token` calls (the timer, SDKs, MCP servers). ARM
+commands stay on Linux `az` and its four-hour login. `AZ_LINUX=1` skips the
+Windows CLI.
 
 Setup on the laptop (once): WSL with systemd (`/etc/wsl.conf`: `[boot]`
-`systemd=true`), `az login`, and a working
+`systemd=true`), the Windows Azure CLI signed in (`az login` in PowerShell),
+and a working
 `ssh -o BatchMode=yes levin@r2-d2 true` from WSL. `chezmoi apply` then
 enables the timer.
 

@@ -50,8 +50,20 @@ OP="${OP:-$(command -v op || command -v op.exe || true)}"
 [[ -f "$HOME/.config/dotfiles/work.env" ]] && . "$HOME/.config/dotfiles/work.env"
 [[ -n "${ADO_ORG:-}" ]] || die "ADO_ORG unknown; is this a work machine (chezmoi work = true)?"
 
-entra=$(az account get-access-token --resource "$ADO_RESOURCE" --query accessToken -o tsv 2>/dev/null) \
-  || die "Azure CLI not signed in; run: az login"
+# Persistent=true fires the timer right after boot, often before DNS works.
+for _ in {1..12}; do
+  getent hosts login.microsoftonline.com >/dev/null && break
+  sleep 10
+done
+
+# On WSL, ~/.local/bin/az gets the token from the Windows Azure CLI.
+err=$(mktemp)
+trap 'rm -f "$err"' EXIT
+if ! entra=$(az account get-access-token --resource "$ADO_RESOURCE" --query accessToken -o tsv 2>"$err"); then
+  reason=$(grep -m1 '^ERROR' "$err" || tail -n1 "$err")
+  die "Azure CLI couldn't get a token (${reason:0:160}); if it says to, run: az login"
+fi
+entra=${entra%$'\r'}
 
 api() { # api <METHOD> [json-body] -> response body on stdout
   local method="$1" body="${2:-}" url="$API_BASE/$ADO_ORG/_apis/tokens/pats?api-version=$API_VERSION"
