@@ -271,13 +271,14 @@ Windows CLI.
 Setup on the laptop (once): WSL with systemd (`/etc/wsl.conf`: `[boot]`
 `systemd=true`), the Windows Azure CLI signed in (`az login` in PowerShell),
 and a working
-`ssh -o BatchMode=yes levin@r2-d2 true` from WSL. `chezmoi apply` then
-enables the timer.
+`ssh.exe -o BatchMode=yes levin@r2-d2 true` from WSL using the Windows
+1Password SSH agent. `chezmoi apply` then enables the timer. Its PAT push uses
+the same SSH agent; manual pushes also select `ssh.exe` when available.
 
 The pushed file holds the same values the rendered work files (`work.env`,
 `.npmrc`) contain anyway.
 
-**WSL prerequisites:** 1Password for Windows with the
+**WSL prerequisites:** 1Password for Windows with its SSH agent, the
 [WSL integration](https://developer.1password.com/docs/ssh/integrations/wsl/)
 and CLI integration turned on. chezmoi calls `op.exe` when there's no Linux
 `op`, and git signs through `op-ssh-sign-wsl.exe`.

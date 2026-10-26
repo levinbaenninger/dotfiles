@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Copy the 1Password item Work/dotfiles to a headless work host, which has no
-# 1Password app, then re-apply the dotfiles there. Run on the Mac:
+# 1Password app, then re-apply the dotfiles there. Run on a desktop machine:
 #
 #   scripts/push-work-secrets.sh r2d2
 #
@@ -8,10 +8,10 @@
 # The values are never printed; they travel over SSH into a 0600 file.
 set -euo pipefail
 host="${1:?usage: $0 <ssh-host>}"
-# On WSL, 1Password's CLI lives on the Windows side. SSH stays WSL's own
-# `ssh`: its key can authenticate to the work host without a desktop agent.
+# OP and SSH accept overrides. On WSL, prefer Windows SSH so it can use
+# 1Password's SSH agent.
 OP="${OP:-$(command -v op || command -v op.exe)}"
-SSH="${SSH:-ssh}"
+SSH="${SSH:-$(command -v ssh.exe || command -v ssh)}"
 
 json=$("$OP" item get dotfiles --vault Work --format json \
   | jq '[.fields[] | select(.label and .value and .label != "password" and .label != "notesPlain")

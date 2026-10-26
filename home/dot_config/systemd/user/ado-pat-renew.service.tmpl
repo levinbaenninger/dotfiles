@@ -13,6 +13,7 @@ RestartSec=15min
 ExecStart={{ .chezmoi.homeDir }}/dotfiles/scripts/renew-ado-pat.sh
 Environment=DOTFILES_DIR={{ .chezmoi.homeDir }}/dotfiles
 Environment=ADO_PAT_PUSH_HOSTS={{ join " " .fleet.work }}
-# Windows-side 1Password CLI; user services don't get the Windows PATH, so use
-# an absolute path. The push to the server uses WSL's own ssh.
+# Windows-side 1Password CLI and SSH agent; user services don't get the Windows
+# PATH, so use absolute paths.
 Environment=OP={{ lookPath "op.exe" | default "op.exe" }}
+Environment=SSH={{ lookPath "ssh.exe" }}
