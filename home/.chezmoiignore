@@ -22,8 +22,8 @@
 .local/bin/docker
 {{- end }}
 
-{{- if not (and .work .headless) }}
-# Azure DevOps git credential helper: headless work VMs only.
+{{- if not (and .work (or .headless (eq .profile "wsl"))) }}
+# Azure DevOps git credential helper: Linux work machines.
 .local/bin/git-credential-azure-devops
 {{- end }}
 

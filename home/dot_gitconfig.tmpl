@@ -77,7 +77,7 @@
 	insteadOf = ssh://git@github.com/
 {{- end }}
 
-{{- if and .work .headless }}
+{{- if and .work (or .headless (eq .profile "wsl")) }}
 
 # Azure DevOps over HTTPS: PAT from 1Password (ado_pat), else `az login`.
 [credential "https://dev.azure.com"]
