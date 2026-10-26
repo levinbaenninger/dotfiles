@@ -173,6 +173,10 @@ agents:
         statusLine:
           type: command
           command: bash ~/.claude/statusline-command.sh
+        # No Co-Authored-By trailer on commits, no "Generated with" line on PRs.
+        attribution:
+          commit: ""
+          pr: ""
 
   codex:
     plugins: []
