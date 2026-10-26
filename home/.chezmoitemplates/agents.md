@@ -8,6 +8,11 @@ Source: ~/dotfiles/home/.chezmoitemplates/agents.md. Edit there, then `chezmoi a
 - Commit messages follow Conventional Commits: `<type>[optional scope]: <description>`.
 - Open pull requests as drafts unless asked otherwise.
 
+## Model routing
+
+- Resolve p3 roles from the project-root `p3-models.md`, falling back to `~/.agents/p3-models.md`.
+- For difficult code changes, use `hardest tasks` to analyze and plan. Use the matching code role to implement and verify that plan.
+
 ## This machine
 
 {{ if eq .profile "mac" -}}
