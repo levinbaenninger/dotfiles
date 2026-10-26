@@ -54,3 +54,7 @@ brew "pueue"
 brew "shellcheck"
 brew "tldr"
 brew "wget"
+
+# Documents (LaTeX: pdflatex, latexmk; texlive has no biber)
+brew "texlive"
+brew "biber"
