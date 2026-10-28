@@ -146,6 +146,7 @@ Both agents are configured from one place:
 | --- | --- | --- |
 | Global instructions | `home/.chezmoitemplates/agents.md` | `~/.claude/CLAUDE.md`, `~/.codex/AGENTS.md` |
 | MCP servers | `agents.mcp` in `home/.chezmoidata/agents.yaml` | Claude user scope (`claude mcp add-json`), `~/.codex/config.toml` |
+| MCP server packages | `agents.mcp_packages` | installed with `vp add -g`; update with `vp update -g` |
 | Skills | `agents.skills` | `~/.agents/skills` (Codex reads it); entries with `claude: true` also link into `~/.claude/skills` |
 | p3-stack | `agents.p3stack` | cloned to `~/.local/share/p3-stack`, skills linked into both skills dirs |
 | Removals | `agents.retired` | skills, plugins and marketplaces removed from both agents |

@@ -7,15 +7,15 @@
 # which the server command sources at launch.
 
 agents:
+  # Every agent session starts its own copy of each stdio server, so their
+  # memory adds up fast. Node servers run from packages installed globally
+  # (`mcp_packages` below) rather than `npx -y`, which keeps an `npm exec`
+  # process of 100-300 MB resident next to every server it starts.
   mcp:
     # Available on every machine.
     common:
       playwright:
-        command: npx
-        args: ["-y", "@playwright/mcp@latest"]
-      chrome-devtools:
-        command: npx
-        args: ["-y", "chrome-devtools-mcp@latest", "--no-usage-statistics"]
+        command: playwright-mcp
       executor:
         url: https://executor.sh/levexis/mcp
 
@@ -33,13 +33,22 @@ agents:
             . "$HOME/.config/dotfiles/work.env" &&
             if [ -n "$ADO_PAT" ]; then
             export PERSONAL_ACCESS_TOKEN="$(printf 'pat:%s' "$ADO_PAT" | base64 | tr -d '\n')";
-            exec npx -y @azure-devops/mcp "$ADO_ORG" --authentication pat;
-            else exec npx -y @azure-devops/mcp "$ADO_ORG" --authentication azcli; fi
+            exec mcp-server-azuredevops "$ADO_ORG" --authentication pat;
+            else exec mcp-server-azuredevops "$ADO_ORG" --authentication azcli; fi
       sonarqube:
         command: sh
         args:
           - -c
-          - . "$HOME/.config/dotfiles/work.env" && exec "${CONTAINER_RUNTIME:-docker}" run --init --pull=always -i --rm -e SONARQUBE_TOKEN -e SONARQUBE_URL -e SONARQUBE_MCP_IN_CONTAINER=true docker.io/sonarsource/sonarqube-mcp
+          # Uncapped, the JVM sizes its heap from host RAM and each container
+          # grows to ~1 GB. 512 MB still fits the analyzer download (384 MB
+          # ran out of heap).
+          - . "$HOME/.config/dotfiles/work.env" && exec "${CONTAINER_RUNTIME:-docker}" run --init --pull=always -i --rm -e SONARQUBE_TOKEN -e SONARQUBE_URL -e SONARQUBE_MCP_IN_CONTAINER=true -e JAVA_OPTS="-Xmx512m -XX:+UseSerialGC" docker.io/sonarsource/sonarqube-mcp
+
+  # npm packages behind the MCP commands above, installed with `vp add -g` by
+  # run_onchange_after_30-agents.sh. Update them with `vp update -g`.
+  mcp_packages:
+    common: ["@playwright/mcp"]
+    work: ["@azure-devops/mcp"]
 
   # Installed into ~/.agents/skills with the `skills` CLI. Codex reads that
   # directory directly; `claude: true` also links them into ~/.claude/skills.
@@ -109,6 +118,10 @@ agents:
   # Removed on every machine by run_onchange_after_30-agents.sh. Drop an entry
   # once every machine has applied it.
   retired:
+    # MCP servers, also dropped from ~/.codex/config.toml by its template.
+    mcp:
+      # Rarely used next to playwright, which covers the same browser work.
+      - chrome-devtools
     skills:
       # Replaced by p3-stack.
       - how
@@ -200,8 +213,6 @@ agents:
           use_memories: false
     # Extra per-server Codex settings merged onto the MCP definitions above.
     mcp_overrides:
-      chrome-devtools:
-        startup_timeout_sec: 30
       executor:
         tools:
           skills:

@@ -45,6 +45,9 @@
 {{-   end -}}
 {{-   $_ := set $servers $name $new -}}
 {{- end -}}
+{{- range $name := .agents.retired.mcp -}}
+{{-   $_ := unset $servers $name -}}
+{{- end -}}
 {{- /* Hook trust entries outlive their plugin; drop those of retired plugins. */ -}}
 {{- $hooks := get $out "hooks" -}}
 {{- if kindIs "map" $hooks -}}
