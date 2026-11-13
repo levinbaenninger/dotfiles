@@ -190,6 +190,17 @@ agents:
         attribution:
           commit: ""
           pr: ""
+        # The setting above only stops Claude Code from asking for those lines;
+        # the model still adds them out of habit. This hook rejects commits and
+        # PR writes that contain them, so it retries without. Lists replace
+        # rather than merge, so other PreToolUse hooks belong here too.
+        hooks:
+          PreToolUse:
+            - matcher: "Bash|mcp__azure-devops__repo_pull_request_write|mcp__azure-devops__repo_pull_request_thread_write"
+              hooks:
+                - type: command
+                  command: bash ~/.claude/hooks/block-ai-attribution.sh
+                  timeout: 10
 
   codex:
     plugins: []

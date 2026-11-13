@@ -7,6 +7,7 @@ Source: ~/dotfiles/home/.chezmoitemplates/agents.md. Edit there, then `chezmoi a
 
 - Commit messages follow Conventional Commits: `<type>[optional scope]: <description>`.
 - Open pull requests as drafts unless asked otherwise.
+- Never add AI attribution to commits or PRs: no `Co-Authored-By` trailer for an AI model, no "Generated with Claude Code" or similar line.
 
 ## Model routing
 
