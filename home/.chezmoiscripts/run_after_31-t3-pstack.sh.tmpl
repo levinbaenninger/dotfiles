@@ -1,0 +1,49 @@
+#!/usr/bin/env bash
+# Installs or updates the t3-pstack plugin (agents.t3pstack in
+# .chezmoidata/agents.yaml) in every Claude Code and Codex home T3 can run,
+# using the installer from the chezmoi-managed checkout. Runs on every apply but
+# only calls the installer when the checkout's VERSION differs from the one last
+# installed cleanly, so a failed or partial run retries on the next apply.
+set -euo pipefail
+export PATH="$HOME/.local/bin:{{ .brewPrefix }}/bin:/usr/local/bin:$PATH"
+# shellcheck disable=SC1091
+[[ -f "$HOME/.vite-plus/env" ]] && . "$HOME/.vite-plus/env"
+export PATH="$HOME/.vite-plus/bin:$HOME/.vite-plus/fallback-bin:$PATH"
+export DO_NOT_TRACK=1 DISABLE_TELEMETRY=1
+
+# --- Retired checkouts (old p3-stack) ------------------------------------------
+for old in {{ range .agents.retired.checkouts }}{{ printf "%s/%s" $.chezmoi.homeDir . | squote }} {{ end }}; do
+  for link in "$HOME"/.agents/skills/* "$HOME"/.claude/skills/*; do
+    [[ -L "$link" ]] || continue
+    case "$(readlink "$link")" in "$old"/*) rm "$link" ;; esac
+  done
+  if [[ -d "$old" ]]; then
+    echo "==> Removing retired checkout $old"
+    rm -rf "$old"
+  fi
+done
+# Claude links into ~/.agents/skills whose target is gone.
+for link in "$HOME"/.claude/skills/*; do
+  [[ -L "$link" && ! -e "$link" ]] || continue
+  case "$(readlink "$link")" in ../../.agents/skills/*) rm "$link" ;; esac
+done
+
+# --- t3-pstack -----------------------------------------------------------------
+repo="$HOME/{{ .agents.t3pstack.path }}"
+stamp="${XDG_STATE_HOME:-$HOME/.local/state}/dotfiles/t3-pstack.version"
+[[ -f "$repo/VERSION" ]] || { echo "t3-pstack: $repo missing; skipping" >&2; exit 0; }
+command -v node >/dev/null || { echo "t3-pstack: node not on PATH; skipping" >&2; exit 0; }
+version="$(<"$repo/VERSION")"
+[[ "$(cat "$stamp" 2>/dev/null)" == "$version" ]] && exit 0
+
+echo "==> t3-pstack $version"
+if node "$repo/tools/install.mjs" update; then
+  # The installer skips a harness whose CLI is missing without failing, so only
+  # record the version once both were there to install into.
+  if command -v claude >/dev/null && command -v codex >/dev/null; then
+    mkdir -p "$(dirname "$stamp")"
+    printf '%s\n' "$version" >"$stamp"
+  fi
+else
+  echo "t3-pstack: installer reported problems; it runs again on the next apply" >&2
+fi

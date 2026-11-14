@@ -1,3 +1,5 @@
 # Model sheets left behind by the retired pstack plugin.
 .agents/pstack-models.md
 .codex/pstack-models.md
+# Model sheet of the retired p3-stack; t3-pstack reads ~/.config/t3-pstack/models.md.
+.agents/p3-models.md

@@ -105,15 +105,15 @@ agents:
       skills: [design-taste-frontend]
       claude: true
 
-  # p3-stack: pstack rebuilt for T3 Code. Cloned to `path` by
-  # .chezmoiexternal.toml.tmpl instead of installed with the skills CLI, because
-  # its skills reference agents/ and README.md elsewhere in the repo.
-  # run_after_31-p3-stack.sh links every skills/* into ~/.agents/skills and
-  # ~/.claude/skills.
-  p3stack:
-    repo: https://github.com/uzairansaruzi/p3-stack.git
-    path: .local/share/p3-stack
-    exclude: [tdd, teach] # Matt's versions win
+  # t3-pstack: pstack for T3 Code, installed as the `t3-pstack@t3-pstack`
+  # plugin in Claude Code and Codex by its own installer (tools/install.mjs).
+  # .chezmoiexternal.toml.tmpl keeps a checkout at `path` (refreshed weekly);
+  # run_after_31-t3-pstack.sh runs that checkout's installer whenever its
+  # VERSION differs from the one last installed. The model sheet is
+  # home/dot_config/t3-pstack/models.md.
+  t3pstack:
+    repo: https://github.com/chhoumann/t3-pstack.git
+    path: .local/share/t3-pstack
 
   # Removed on every machine by run_onchange_after_30-agents.sh. Drop an entry
   # once every machine has applied it.
@@ -122,8 +122,12 @@ agents:
     mcp:
       # Rarely used next to playwright, which covers the same browser work.
       - chrome-devtools
+    # Old p3-stack checkout, deleted with every link into it by
+    # run_after_31-t3-pstack.sh.
+    checkouts:
+      - .local/share/p3-stack
     skills:
-      # Replaced by p3-stack.
+      # Replaced by p3-stack, now t3-pstack.
       - how
       - why
       - technical-writing

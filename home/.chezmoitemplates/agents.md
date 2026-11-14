@@ -11,7 +11,7 @@ Source: ~/dotfiles/home/.chezmoitemplates/agents.md. Edit there, then `chezmoi a
 
 ## Model routing
 
-- Resolve p3 roles from the project-root `p3-models.md`, falling back to `~/.agents/p3-models.md`.
+- pstack roles (t3-pstack) resolve from the model sheet `~/.config/t3-pstack/models.md`.
 - For difficult code changes, use `hardest tasks` to analyze and plan. Use the matching code role to implement and verify that plan.
 
 ## This machine

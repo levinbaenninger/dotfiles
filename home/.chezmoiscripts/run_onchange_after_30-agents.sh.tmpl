@@ -21,8 +21,7 @@ export DO_NOT_TRACK=1 DISABLE_TELEMETRY=1
 # --- Skills ------------------------------------------------------------------
 echo "==> Agent skills"
 mkdir -p "$HOME/.claude/skills"
-# Retired skills: only those the skills CLI still tracks, so a p3-stack link of
-# the same name survives. Their Claude links are left dangling, so drop those.
+# Retired skills: only those the skills CLI still tracks. Their Claude links are left dangling, so drop those.
 for skill in {{ range .agents.retired.skills }}{{ . | squote }} {{ end }}; do
   if jq -e --arg s "$skill" '.skills[$s]' "$HOME/.agents/.skill-lock.json" >/dev/null 2>&1; then
     npx -y skills@latest remove "$skill" --global --yes
