@@ -1,0 +1,15 @@
+{{ if eq .profile "mac" -}}
+#!/usr/bin/env bash
+# Retire the dev-server port tunnel: T3 Code forwards ports itself now.
+label=com.github.levinbaenninger.dev-tunnel
+launchctl bootout "gui/$UID/$label" 2>/dev/null || true
+rm -f "$HOME/Library/LaunchAgents/$label.plist" "$HOME/.local/bin/dev-tunnel"
+{{ else if and .work (eq .profile "wsl") -}}
+#!/usr/bin/env bash
+# Retire the dev-server port tunnel: T3 Code forwards ports itself now.
+systemctl --user stop dev-tunnel.service 2>/dev/null || true
+rm -f "$HOME/.config/systemd/user/dev-tunnel.service" \
+  "$HOME/.config/systemd/user/default.target.wants/dev-tunnel.service" \
+  "$HOME/.local/bin/dev-tunnel"
+systemctl --user daemon-reload 2>/dev/null || true
+{{ end -}}
